@@ -9,12 +9,6 @@ class History(TimestampedModel):
 
     description = models.TextField()
     body = models.TextField()
-
-    # Every history must have an author. This will answer questions like "Who
-    # gets credit for writing this history?" and "Who can edit this history?".
-    # Unlike the `User` <-> `Profile` relationship, this is a simple foreign
-    # key (or one-to-many) relationship. In this case, one `Profile` can have
-    # many `History`s.
     author = models.ForeignKey(
         "profiles.Profile", on_delete=models.CASCADE, related_name="histories"
     )
