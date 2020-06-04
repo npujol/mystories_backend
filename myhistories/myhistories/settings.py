@@ -41,10 +41,10 @@ INSTALLED_APPS = [
     "django_extensions",
     "rest_framework",
     "drf_yasg",
-    "myhistories.apps.histories",
-    "myhistories.apps.authentication",
-    "myhistories.apps.core",
-    "myhistories.apps.profiles",
+    "apps.authentication",
+    "apps.core",
+    "apps.profiles",
+    "apps.histories",
 ]
 
 MIDDLEWARE = [
@@ -134,11 +134,12 @@ CORS_ORIGIN_WHITELIST = (
 AUTH_USER_MODEL = "authentication.User"
 
 REST_FRAMEWORK = {
-    "EXCEPTION_HANDLER": "myhistories.apps.core.exceptions.core_exception_handler",
+    "EXCEPTION_HANDLER": "apps.core.exceptions.core_exception_handler",
     "NON_FIELD_ERRORS_KEY": "error",
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "myhistories.apps.authentication.backends.JWTAuthentication",
+        "apps.authentication.backends.JWTAuthentication",
     ),
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
     "PAGE_SIZE": 20,
+    "TEST_REQUEST_DEFAULT_FORMAT": "json",
 }

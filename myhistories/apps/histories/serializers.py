@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from myhistories.apps.profiles.serializers import ProfileSerializer
+from ..profiles.serializers import ProfileSerializer
 
 from .models import History, Comment, Tag
 from .relations import TagRelatedField

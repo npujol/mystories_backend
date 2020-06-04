@@ -8,7 +8,7 @@ from django.contrib.auth.models import (
 )
 from django.db import models
 
-from myhistories.apps.core.models import TimestampedModel
+from ..core.models import TimestampedModel
 
 
 class UserManager(BaseUserManager):

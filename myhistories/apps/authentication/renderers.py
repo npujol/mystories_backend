@@ -1,4 +1,4 @@
-from myhistories.apps.core.renderers import GenericJSONRenderer
+from ..core.renderers import GenericJSONRenderer
 
 
 class UserJSONRenderer(GenericJSONRenderer):

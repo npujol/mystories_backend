@@ -10,7 +10,7 @@ from rest_framework.views import APIView
 
 from .models import History, Comment, Tag
 from .renderers import HistoryJSONRenderer, CommentJSONRenderer
-from .serializers import Historieserializer, CommentSerializer, TagSerializer
+from .serializers import HistorySerializer, CommentSerializer, TagSerializer
 
 
 class HistoryViewSet(
@@ -39,7 +39,7 @@ class HistoryViewSet(
     queryset = History.objects.select_related("author", "author__user")
     permission_classes = (IsAuthenticatedOrReadOnly,)
     renderer_classes = (HistoryJSONRenderer,)
-    serializer_class = Historieserializer
+    serializer_class = HistorySerializer
 
     def get_queryset(self):
         queryset = self.queryset
@@ -215,7 +215,7 @@ class HistoriesFavoriteAPIView(APIView):
 
     permission_classes = (IsAuthenticated,)
     renderer_classes = (HistoryJSONRenderer,)
-    serializer_class = Historieserializer
+    serializer_class = HistorySerializer
 
     def delete(self, request, history_slug=None):
         profile = self.request.user.profile
@@ -297,7 +297,7 @@ class HistoriesFeedAPIView(generics.ListAPIView):
     permission_classes = (IsAuthenticated,)
     queryset = History.objects.all()
     renderer_classes = (HistoryJSONRenderer,)
-    serializer_class = Historieserializer
+    serializer_class = HistorySerializer
 
     def get_queryset(self):
         return History.objects.filter(

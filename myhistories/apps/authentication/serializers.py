@@ -2,13 +2,14 @@ from django.contrib.auth import authenticate
 
 from rest_framework import serializers
 
-from myhistories.apps.profiles.serializers import ProfileSerializer
+from ..profiles.serializers import ProfileSerializer
 
 from .models import User
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
     """Serializers registration requests and creates a new user."""
+
     password = serializers.CharField(max_length=128, min_length=8, write_only=True)
     token = serializers.CharField(max_length=255, read_only=True)
 
@@ -27,7 +28,7 @@ class LoginSerializer(serializers.Serializer):
     token = serializers.CharField(max_length=255, read_only=True)
 
     def validate(self, data):
-         email = data.get("email", None)
+        email = data.get("email", None)
         password = data.get("password", None)
         if email is None:
             raise serializers.ValidationError("An email address is required to log in.")
@@ -41,7 +42,7 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 "A user with this email and password was not found."
             )
-       
+
         if not user.is_active:
             raise serializers.ValidationError("This user has been deactivated.")
 
@@ -50,7 +51,7 @@ class LoginSerializer(serializers.Serializer):
 
 class UserSerializer(serializers.ModelSerializer):
     """Handles serialization and deserialization of User objects."""
-  
+
     password = serializers.CharField(max_length=128, min_length=8, write_only=True)
     profile = ProfileSerializer(write_only=True)
 
@@ -81,7 +82,7 @@ class UserSerializer(serializers.ModelSerializer):
             setattr(instance, key, value)
 
         if password is not None:
-             instance.set_password(password)
+            instance.set_password(password)
 
         instance.save()
 
