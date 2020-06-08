@@ -1,109 +1,81 @@
 from rest_framework.test import APITestCase
 from django.urls import reverse
 from rest_framework import status
-from myhistories.apps.authentication.models import User
-from myhistories.apps.authentication.serializers import (
+from .models import User
+from ..core.tests_utils import BaseRestTestCase
+from ..authentication.serializers import (
     RegistrationSerializer,
     LoginSerializer,
     UserSerializer,
 )
 
 
-class RegistrationAPIViewTestCase(APITestCase):
+class RegistrationTestCase(APITestCase):
     def setUp(self):
-        self.url = reverse("registration-list")
+        self.url = reverse("authentication:registration")
 
-    def test_create_registration(self):
+    def test_registration(self):
         users_count = User.objects.count()
         response = self.client.post(
             self.url,
             {
                 "email": "juan@nieves.com",
-                "password": "you_know_nothing",
-                "is_active": "True",
+                "username": "juancito",
+                "password": "You_know_nothing123",
             },
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(User.objects.count(), (users_count + 1))
         self.assertEqual(User.objects.last().email, "juan@nieves.com")
 
-    # def test_list_users(self):
-    #     """
-    #     Test to verify user user list
-    #     """
 
-    #     response = self.client.get(self.url, limit=self.NUMBER_PAGES)
-    #     self.assertEqual(
-    #         response.json().get("count"), User.objects.count(),
-    #     )
+class LoginTestCase(BaseRestTestCase):
+    def setUp(self):
+        super().setUp()
+        self.url = reverse("authentication:login")
 
-
-# class UserListCreateAPIViewTestCase(APITestCase):
-#     def setUp(self):
-#         super().setUp()
-#         self.url = reverse("core:user-list")
-
-#     def test_create_user(self):
-#         users_count = User.objects.count()
-#         response = self.client.post(
-#             self.url,
-#             {
-#                 "email": "juan@nieves.com",
-#                 "password": "you_know_nothing",
-#                 "is_active": "True",
-#             },
-#         )
-#         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-#         self.assertEqual(User.objects.count(), (users_count + 1))
-#         self.assertEqual(User.objects.last().email, "juan@nieves.com")
-
-#     def test_list_users(self):
-#         """
-#         Test to verify user user list
-#         """
-
-#         response = self.client.get(self.url, limit=self.NUMBER_PAGES)
-#         self.assertEqual(
-#             response.json().get("count"), User.objects.count(),
-#         )
+    def test_login_with_email(self):
+        response = self.client.post(
+            self.url, {"email": self.user.email, "password": "You_know_nothing123",},
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
-# class UserDetailAPIViewTestCase(APITestCase):
-#     def setUp(self):
-#         super().setUp()
-#         with schema_context(schema_name=get_public_schema_name()):
-#             self.user_test = User.objects.create_user(
-#                 email="email@email.de", password="password1", is_active=True,
-#             )
-#         self.url = reverse("core:user-detail", kwargs={"pk": self.user_test.pk})
+class UserRetrieveUpdateAPIView(BaseRestTestCase):
+    def setUp(self):
+        super().setUp()
+        self.url = reverse("authentication:user-detail", kwargs={"pk": self.user.pk})
 
-#     def test_user_object_detail(self):
-#         """
-#         Test to verify user object detail
-#         """
-#         response = self.client.get(self.url)
-#         self.assertEqual(200, response.status_code)
-#         user_serializer_data = UserSerializer(instance=self.user_test).data
-#         self.assertEqual(user_serializer_data, response.json())
+    def test_user_object_detail(self):
+        """
+        Test to verify user object detail
+        """
+        response = self.client.get(
+            path=self.url, HTTP_AUTHORIZATION="Bearer " + self.tokens["access"]
+        )
+        self.assertEqual(200, response.status_code)
+        user_serializer_data = UserSerializer(instance=self.user).data
+        self.assertEqual(user_serializer_data, response.json().get("user"))
 
-#     def test_user_object_update(self):
-#         response = self.client.put(
-#             self.url,
-#             {
-#                 "email": "self@email.cc",
-#                 "password": "self.password",
-#                 "is_active": "True",
-#             },
-#         )
-#         user = User.objects.get(id=self.user_test.id)
-#         self.assertEqual(response.json().get("email"), user.email)
+    def test_user_object_update(self):
+        response = self.client.put(
+            self.url,
+            {
+                "username": "another",
+                "email": "jon@snow.com",
+                "password": "You_know_nothing123",
+                "profile": self.profile.id,
+            },
+            HTTP_AUTHORIZATION="Bearer " + self.tokens["access"],
+        )
+        user = User.objects.get(id=self.user.id)
+        self.assertEqual(response.json().get("user").get("username"), user.username)
 
-#     def test_user_object_partial_update(self):
-#         response = self.client.patch(self.url, {"email": "self@email.cc"},)
-#         user = User.objects.get(id=self.user_test.id)
-#         self.assertEqual(response.json().get("email"), user.email)
-
-#     def test_user_object_delete(self):
-#         with schema_context(schema_name=self.tenant):
-#             response = self.client.delete(self.url)
-#         self.assertEqual(204, response.status_code)
+    def test_user_object_partial_update(self):
+        response = self.client.patch(
+            self.url,
+            {"username": "another"},
+            HTTP_AUTHORIZATION="Bearer " + self.tokens["access"],
+        )
+        user = User.objects.get(id=self.user.id)
+        self.assertEqual(response.json().get("user").get("username"), user.username)
