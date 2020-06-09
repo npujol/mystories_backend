@@ -30,6 +30,7 @@ class RegistrationAPIView(APIView):
             "refresh": str(refresh),
             "access": str(refresh.access_token),
         }
+
         return Response(tokens, status.HTTP_201_CREATED)
 
 
@@ -45,12 +46,14 @@ class LoginAPIView(APIView):
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
+
         user = User.objects.get(email=request.data.get("email"))
         refresh = RefreshToken.for_user(user)
         tokens = {
             "refresh": str(refresh),
             "access": str(refresh.access_token),
         }
+
         return Response(tokens, status=status.HTTP_200_OK)
 
 
@@ -69,8 +72,8 @@ class UserRetrieveUpdateAPIView(RetrieveUpdateAPIView):
     serializer_class = UserSerializer
 
     def retrieve(self, request, *args, **kwargs):
-        print(request.data.get("user"))
         serializer = self.serializer_class(request.user)
+
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def update(self, request, *args, **kwargs):
