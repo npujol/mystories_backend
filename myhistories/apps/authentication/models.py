@@ -1,4 +1,3 @@
-import jwt
 from datetime import datetime, timedelta
 from django.conf import settings
 from django.contrib.auth.models import (
@@ -8,7 +7,6 @@ from django.contrib.auth.models import (
 )
 from django.db import models
 from rest_framework_simplejwt.tokens import RefreshToken
-
 
 from ..core.models import TimestampedModel
 
