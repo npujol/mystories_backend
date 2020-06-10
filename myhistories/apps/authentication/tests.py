@@ -54,7 +54,7 @@ class UserRetrieveUpdateAPIView(BaseRestTestCase):
         )
         self.new_profile = Profile.objects.create(user=self.new_user, bio="bio notJon")
         self.url = reverse(
-            "authentication:user-detail", kwargs={"pk": self.new_user.pk}
+            "authentication:user-detail", kwargs={"username": self.new_user.username}
         )
 
     def test_user_object_detail(self):

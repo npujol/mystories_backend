@@ -3,9 +3,10 @@ from .views import LoginAPIView, RegistrationAPIView, UserRetrieveUpdateAPIView
 
 
 app_name = "authentication"
+
 urlpatterns = [
     url(
-        r"^users/(?P<pk>[0-9]+)/$",
+        r"^api/users/(?P<username>\w+)/$",
         UserRetrieveUpdateAPIView.as_view(),
         name="user-detail",
     ),

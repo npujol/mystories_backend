@@ -50,33 +50,17 @@ class UserRetrieveUpdateAPIView(RetrieveUpdateAPIView):
     """
     RetrieveUpdateAPIView description
 
-    retrieve: Retrieve history
+    retrieve: Retrieve a user
 
-    update: Update history
+    update: Update a user
+
+    partial_update: Partial update for a user
 
     """
 
     permission_classes = (IsAuthenticated,)
     renderer_classes = (UserJSONRenderer,)
     serializer_class = UserSerializer
+
+    lookup_field = "username"
     queryset = User.objects.all()
-
-    # def update(self, request, *args, **kwargs):
-    #     user_data = request.data
-    #     print(user_data.get("profile")["bio"])
-    #     serializer_data = {
-    #         "username": user_data.get("username"),
-    #         "email": user_data.get("email"),
-    #         "profile": {
-    #             "bio": user_data.get("profile")["bio"],
-    #             "image": user_data.get("profile")["image"],
-    #         },
-    #     }
-
-    #     serializer = self.serializer_class(
-    #         request.user, data=serializer_data, partial=True
-    #     )
-    #     serializer.is_valid(raise_exception=True)
-    #     serializer.save()
-
-    #     return Response(serializer.data, status=status.HTTP_200_OK)
