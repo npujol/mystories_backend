@@ -13,7 +13,7 @@ class ProfileRetrieveAPIView(BaseRestTestCase):
     def setUp(self):
         super().setUp()
         self.url = reverse(
-            "profiles:profile_retrieve", kwargs={"username": self.user.username}
+            "profiles:profile_detail", kwargs={"user__username": self.user.username}
         )
 
     def test_profile_object_detail(self):
@@ -29,6 +29,26 @@ class ProfileRetrieveAPIView(BaseRestTestCase):
             response.json().get("profile"),
         )
 
+    def test_profile_object_update(self):
+        response = self.client.put(
+            self.url,
+            {"bio": "another bio", "image": "image",},
+            HTTP_AUTHORIZATION="Bearer " + self.user.token,
+        )
+        profile = Profile.objects.get(id=self.profile.id)
+        self.assertEqual(response.json().get("profile").get("bio"), profile.bio)
+
+    def test_user_object_partial_update(self):
+        response = self.client.patch(
+            self.url,
+            {"bio": "another more"},
+            HTTP_AUTHORIZATION="Bearer " + self.user.token,
+        )
+        profile = Profile.objects.get(id=self.profile.id)
+        self.assertEqual(
+            response.json().get("profile").get("username"), profile.user.username
+        )
+
 
 class ProfileFollowAPIView(BaseRestTestCase):
     def setUp(self):
@@ -40,15 +60,27 @@ class ProfileFollowAPIView(BaseRestTestCase):
             user=self.user_test, bio="bio jonjon"
         )
         self.url = reverse(
-            "profiles:profile_follow", kwargs={"username": self.user_test.username}
+            "profiles:profile_follow",
+            kwargs={"user__username": self.user_test.username},
         )
+
+    def test_follow_profile(self):
+        """
+        Test to verify follow profile
+        """
+        response = self.client.post(
+            self.url, HTTP_AUTHORIZATION="Bearer " + self.user.token
+        )
+
+        self.assertEqual(201, response.status_code)
+        self.assertTrue(response.json().get("profile")["following"])
 
     def test_unfollow_profile(self):
         """
         Test to verify unfollow profile
         """
         response = self.client.delete(
-            path=self.url, HTTP_AUTHORIZATION="Bearer " + self.user.token
+            self.url, HTTP_AUTHORIZATION="Bearer " + self.user.token
         )
 
         self.assertEqual(200, response.status_code)
