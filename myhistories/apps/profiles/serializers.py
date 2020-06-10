@@ -1,10 +1,13 @@
 from rest_framework import serializers
 
+from ..authentication.models import User
 from .models import Profile
 
 
 class ProfileSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(source="user.username")
+    user = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(), read_only=False
+    )
     bio = serializers.CharField(allow_blank=True, required=False)
     image = serializers.SerializerMethodField()
     following = serializers.SerializerMethodField()
@@ -12,12 +15,12 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = (
-            "username",
+            "user",
             "bio",
             "image",
             "following",
         )
-        read_only_fields = ("username",)
+        read_only_fields = ("user",)
 
     def get_image(self, obj):
         if obj.image:

@@ -21,7 +21,7 @@ class ProfileRetrieveAPIView(BaseRestTestCase):
         Test to verify profile object detail
         """
         response = self.client.get(
-            path=self.url, HTTP_AUTHORIZATION="Bearer " + self.tokens["access"]
+            path=self.url, HTTP_AUTHORIZATION="Bearer " + self.user.token
         )
         self.assertEqual(200, response.status_code)
         self.assertEqual(
@@ -48,7 +48,7 @@ class ProfileFollowAPIView(BaseRestTestCase):
         Test to verify unfollow profile
         """
         response = self.client.delete(
-            path=self.url, HTTP_AUTHORIZATION="Bearer " + self.tokens["access"]
+            path=self.url, HTTP_AUTHORIZATION="Bearer " + self.user.token
         )
 
         self.assertEqual(200, response.status_code)
