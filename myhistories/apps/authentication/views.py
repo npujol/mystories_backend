@@ -25,15 +25,9 @@ class RegistrationAPIView(APIView):
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
-
         user = serializer.save()
-        refresh = RefreshToken.for_user(user)
-        tokens = {
-            "refresh": str(refresh),
-            "access": str(refresh.access_token),
-        }
 
-        return Response(tokens, status.HTTP_201_CREATED)
+        return Response(serializer.data, status.HTTP_201_CREATED)
 
 
 class LoginAPIView(APIView):
@@ -49,14 +43,7 @@ class LoginAPIView(APIView):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        user = User.objects.get(email=request.data.get("email"))
-        refresh = RefreshToken.for_user(user)
-        tokens = {
-            "refresh": str(refresh),
-            "access": str(refresh.access_token),
-        }
-
-        return Response(tokens, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class UserRetrieveUpdateAPIView(RetrieveUpdateAPIView):
@@ -72,28 +59,24 @@ class UserRetrieveUpdateAPIView(RetrieveUpdateAPIView):
     permission_classes = (IsAuthenticated,)
     renderer_classes = (UserJSONRenderer,)
     serializer_class = UserSerializer
+    queryset = User.objects.all()
 
-    def retrieve(self, request, *args, **kwargs):
-        serializer = self.serializer_class(request.user)
+    # def update(self, request, *args, **kwargs):
+    #     user_data = request.data
+    #     print(user_data.get("profile")["bio"])
+    #     serializer_data = {
+    #         "username": user_data.get("username"),
+    #         "email": user_data.get("email"),
+    #         "profile": {
+    #             "bio": user_data.get("profile")["bio"],
+    #             "image": user_data.get("profile")["image"],
+    #         },
+    #     }
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    #     serializer = self.serializer_class(
+    #         request.user, data=serializer_data, partial=True
+    #     )
+    #     serializer.is_valid(raise_exception=True)
+    #     serializer.save()
 
-    def update(self, request, *args, **kwargs):
-        user_data = request.data
-
-        serializer_data = {
-            "username": user_data.get("username", request.user.username),
-            "email": user_data.get("email", request.user.email),
-            "profile": {
-                "bio": user_data.get("bio", request.user.profile.bio),
-                "image": user_data.get("image", request.user.profile.image),
-            },
-        }
-
-        serializer = self.serializer_class(
-            request.user, data=serializer_data, partial=True
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    #     return Response(serializer.data, status=status.HTTP_200_OK)

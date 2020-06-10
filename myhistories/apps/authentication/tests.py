@@ -1,9 +1,13 @@
 from rest_framework.test import APITestCase
 from django.urls import reverse
 from rest_framework import status
+from django.forms.models import model_to_dict
+
+
+from ..core.tests_utils import BaseRestTestCase
+from ..profiles.models import Profile
 
 from .models import User
-from ..core.tests_utils import BaseRestTestCase
 from .serializers import (
     RegistrationSerializer,
     LoginSerializer,
@@ -45,38 +49,46 @@ class LoginTestCase(BaseRestTestCase):
 class UserRetrieveUpdateAPIView(BaseRestTestCase):
     def setUp(self):
         super().setUp()
-        self.url = reverse("authentication:user-detail", kwargs={"pk": self.user.pk})
+        self.new_user = User.objects.create_user(
+            username="notjon", email="nojon@snow.com", password="You_know_nothing123"
+        )
+        self.new_profile = Profile.objects.create(user=self.new_user, bio="bio notJon")
+        self.url = reverse(
+            "authentication:user-detail", kwargs={"pk": self.new_user.pk}
+        )
 
     def test_user_object_detail(self):
         """
         Test to verify user object detail
         """
         response = self.client.get(
-            path=self.url, HTTP_AUTHORIZATION="Bearer " + self.tokens["access"]
+            self.url, HTTP_AUTHORIZATION="Bearer " + self.user.token
         )
         self.assertEqual(200, response.status_code)
-        user_serializer_data = UserSerializer(instance=self.user).data
-        self.assertEqual(user_serializer_data, response.json().get("user"))
+        user_serializer_data = UserSerializer(instance=self.new_user).data
+        self.assertEqual(
+            user_serializer_data.get("email"), response.json().get("user").get("email")
+        )
 
     def test_user_object_update(self):
         response = self.client.put(
             self.url,
             {
-                "username": "another",
-                "email": "jon@snow.com",
+                "username": "nottjon",
+                "email": "nojon@snow.com",
                 "password": "You_know_nothing123",
-                "profile": self.profile.id,
+                "profile": model_to_dict(self.new_profile),
             },
-            HTTP_AUTHORIZATION="Bearer " + self.tokens["access"],
+            HTTP_AUTHORIZATION="Bearer " + self.user.token,
         )
-        user = User.objects.get(id=self.user.id)
+        user = User.objects.get(id=self.new_user.id)
         self.assertEqual(response.json().get("user").get("username"), user.username)
 
     def test_user_object_partial_update(self):
         response = self.client.patch(
             self.url,
-            {"username": "another"},
-            HTTP_AUTHORIZATION="Bearer " + self.tokens["access"],
+            {"username": "notjon"},
+            HTTP_AUTHORIZATION="Bearer " + self.user.token,
         )
-        user = User.objects.get(id=self.user.id)
+        user = User.objects.get(id=self.new_user.id)
         self.assertEqual(response.json().get("user").get("username"), user.username)
