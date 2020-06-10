@@ -8,6 +8,8 @@ from rest_framework.permissions import (
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from drf_yasg.utils import swagger_auto_schema
+
 from .models import History, Comment, Tag
 from .renderers import HistoryJSONRenderer, CommentJSONRenderer
 from .serializers import HistorySerializer, CommentSerializer, TagSerializer
@@ -32,7 +34,6 @@ class HistoryViewSet(
 
     partial_update: Patch history
 
-    destroy: Delete history
     """
 
     lookup_field = "slug"
@@ -115,21 +116,6 @@ class HistoryViewSet(
 
 
 class CommentsListCreateAPIView(generics.ListCreateAPIView):
-    """
-    General ViewSet description
-
-    list: List comment
-
-    retrieve: Retrieve comment
-
-    update: Update comment
-
-    create: Create comment
-
-    partial_update: Patch comment
-
-    destroy: Delete comment
-    """
 
     lookup_field = "history__slug"
     lookup_url_kwarg = "history_slug"
@@ -148,6 +134,9 @@ class CommentsListCreateAPIView(generics.ListCreateAPIView):
 
         return queryset.filter(**filters)
 
+    @swagger_auto_schema(
+        operation_description="Create a comment", responses={404: "slug not found"},
+    )
     def create(self, request, history_slug=None):
         data = request.data.get("comment", {})
         context = {"author": request.user.profile}
@@ -165,26 +154,13 @@ class CommentsListCreateAPIView(generics.ListCreateAPIView):
 
 
 class CommentsDestroyAPIView(generics.DestroyAPIView):
-    """
-    General ViewSet description
-
-    list: List comment
-
-    retrieve: Retrieve comment
-
-    update: Update comment
-
-    create: Create comment
-
-    partial_update: Patch comment
-
-    destroy: Delete comment
-    """
-
     lookup_url_kwarg = "comment_pk"
     permission_classes = (IsAuthenticatedOrReadOnly,)
     queryset = Comment.objects.all()
 
+    @swagger_auto_schema(
+        operation_description="Destroy a comment", responses={404: "slug not found"},
+    )
     def destroy(self, request, history_slug=None, comment_pk=None):
         try:
             comment = Comment.objects.get(pk=comment_pk)
@@ -197,26 +173,14 @@ class CommentsDestroyAPIView(generics.DestroyAPIView):
 
 
 class HistoriesFavoriteAPIView(APIView):
-    """
-    General ViewSet description
-
-    list: List history
-
-    retrieve: Retrieve history
-
-    update: Update history
-
-    create: Create history
-
-    partial_update: Patch history
-
-    destroy: Delete history
-    """
-
     permission_classes = (IsAuthenticated,)
     renderer_classes = (HistoryJSONRenderer,)
     serializer_class = HistorySerializer
 
+    @swagger_auto_schema(
+        operation_description="Delete a favorite history",
+        responses={404: "slug not found"},
+    )
     def delete(self, request, history_slug=None):
         profile = self.request.user.profile
         serializer_context = {"request": request}
@@ -232,6 +196,10 @@ class HistoriesFavoriteAPIView(APIView):
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @swagger_auto_schema(
+        operation_description="Create a favorite history",
+        responses={404: "slug not found"},
+    )
     def post(self, request, history_slug=None):
         profile = self.request.user.profile
         serializer_context = {"request": request}
@@ -249,27 +217,14 @@ class HistoriesFavoriteAPIView(APIView):
 
 
 class TagListAPIView(generics.ListAPIView):
-    """
-    General ViewSet description
-
-    list: List tag
-
-    retrieve: Retrieve tag
-
-    update: Update tag
-
-    create: Create tag
-
-    partial_update: Patch tag
-
-    destroy: Delete tag
-    """
-
     queryset = Tag.objects.all()
     pagination_class = None
     permission_classes = (AllowAny,)
     serializer_class = TagSerializer
 
+    @swagger_auto_schema(
+        operation_description="List all the tags", responses={404: "slug not found"},
+    )
     def list(self, request):
         serializer_data = self.get_queryset()
         serializer = self.serializer_class(serializer_data, many=True)
@@ -278,22 +233,6 @@ class TagListAPIView(generics.ListAPIView):
 
 
 class HistoriesFeedAPIView(generics.ListAPIView):
-    """
-    General ViewSet description
-
-    list: List history
-
-    retrieve: Retrieve history
-
-    update: Update history
-
-    create: Create history
-
-    partial_update: Patch history
-
-    destroy: Delete history
-    """
-
     permission_classes = (IsAuthenticated,)
     queryset = History.objects.all()
     renderer_classes = (HistoryJSONRenderer,)
@@ -304,6 +243,10 @@ class HistoriesFeedAPIView(generics.ListAPIView):
             author__in=self.request.user.profile.follows.all()
         )
 
+    @swagger_auto_schema(
+        operation_description="List all the histories",
+        responses={404: "slug not found"},
+    )
     def list(self, request):
         queryset = self.get_queryset()
         page = self.paginate_queryset(queryset)
