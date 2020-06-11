@@ -38,13 +38,17 @@ class HistorySerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         author = self.context.get("author", None)
+
         tags = validated_data.pop("tags", [])
+
         history = History.objects.create(author=author, **validated_data)
 
         for tag in tags:
+
             obj = Tag.objects.get(tag=tag)
             if not obj:
                 obj = Tag.objects.create(tag=tag)
+
             history.tags.add(obj)
 
         return history

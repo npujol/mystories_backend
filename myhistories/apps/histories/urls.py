@@ -1,4 +1,5 @@
-from django.conf.urls import include, url
+from django.conf.urls import include
+from django.urls import path
 
 from rest_framework.routers import DefaultRouter
 
@@ -7,36 +8,39 @@ from .views import (
     HistoriesFavoriteAPIView,
     HistoriesFeedAPIView,
     CommentsListCreateAPIView,
-    CommentsDestroyAPIView,
+    CommentsRetrieveDestroyAPIView,
     TagListAPIView,
 )
 
 app_name = "histories"
 
 router = DefaultRouter(trailing_slash=False)
-router.register(r"histories", HistoryViewSet, basename="history")
+router.register("api/histories", HistoryViewSet, basename="history")
+router.register("api/tags", TagListAPIView, basename="tag")
+
 
 urlpatterns = [
-    url(r"^", include(router.urls)),
-    url(
-        r"^histories/feed/?$",
-        HistoriesFeedAPIView.as_view(),
-        name="histories_feed_list",
-    ),
-    url(
-        r"^histories/(?P<article_slug>[-\w]+)/favorite/?$",
+    path("", include(router.urls)),
+    path(
+        "api/histories/<str:history__slug>/favorite/",
         HistoriesFavoriteAPIView.as_view(),
         name="history_favorite",
     ),
-    url(
-        r"^histories/(?P<article_slug>[-\w]+)/comments/?$",
-        CommentsListCreateAPIView.as_view(),
-        name="comments",
+    path(
+        "api/histories/feed/",
+        HistoriesFeedAPIView.as_view(),
+        name="histories_feed_list",
     ),
-    url(
-        r"^histories/(?P<article_slug>[-\w]+)/comments/(?P<comment_pk>[\d]+)/?$",
-        CommentsDestroyAPIView.as_view(),
-        name="remove_comment",
+    path(
+        "api/<str:history__slug>/comments",
+        CommentsListCreateAPIView.as_view({"get": "list", "post": "create"}),
+        name="comment_list",
     ),
-    url(r"^tags/?$", TagListAPIView.as_view(), name="tags"),
+    path(
+        "api/histories/<str:history__slug>/comments/<int:pk>",
+        CommentsRetrieveDestroyAPIView.as_view(
+            {"get": "retrieve", "delete": "destroy"}
+        ),
+        name="comment_detail",
+    ),
 ]

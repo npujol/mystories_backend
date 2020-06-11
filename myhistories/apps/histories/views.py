@@ -6,41 +6,40 @@ from rest_framework.permissions import (
     IsAuthenticatedOrReadOnly,
 )
 from rest_framework.response import Response
+from rest_framework.renderers import JSONRenderer
 from rest_framework.views import APIView
 
 from drf_yasg.utils import swagger_auto_schema
 
+from ..profiles.models import Profile
+
 from .models import History, Comment, Tag
-from .renderers import HistoryJSONRenderer, CommentJSONRenderer
 from .serializers import HistorySerializer, CommentSerializer, TagSerializer
 
 
-class HistoryViewSet(
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    mixins.RetrieveModelMixin,
-    viewsets.GenericViewSet,
-):
+class HistoryViewSet(viewsets.ModelViewSet):
     """
     General ViewSet description
 
-    list: List history
+    list: List the histories
 
-    retrieve: Retrieve history
+    retrieve: Retrieve a history
 
-    update: Update history
+    update: Update a history
 
-    create: Create history
+    create: Create a history
 
-    partial_update: Patch history
+    partial_update: Patch a history
+    
+    destroy: Delete a history
 
     """
 
+    permission_classes = (IsAuthenticatedOrReadOnly,)
+    serializer_class = HistorySerializer
+
     lookup_field = "slug"
     queryset = History.objects.select_related("author", "author__user")
-    permission_classes = (IsAuthenticatedOrReadOnly,)
-    renderer_classes = (HistoryJSONRenderer,)
-    serializer_class = HistorySerializer
 
     def get_queryset(self):
         queryset = self.queryset
@@ -60,89 +59,104 @@ class HistoryViewSet(
         return queryset
 
     def create(self, request):
-        serializer_context = {"author": request.user.profile, "request": request}
-        serializer_data = request.data.get("history", {})
-
         serializer = self.serializer_class(
-            data=serializer_data, context=serializer_context
+            data=request.data,
+            context={"author": request.user.profile, "request": request},
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    def list(self, request):
-        serializer_context = {"request": request}
-        page = self.paginate_queryset(self.get_queryset())
 
-        serializer = self.serializer_class(page, context=serializer_context, many=True)
+class TagListAPIView(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet,
+):
+    permission_classes = (AllowAny,)
+    serializer_class = TagSerializer
 
-        return self.get_paginated_response(serializer.data)
+    queryset = Tag.objects.all()
 
-    def retrieve(self, request, slug):
+
+class HistoriesFavoriteAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = HistorySerializer
+
+    @swagger_auto_schema(
+        operation_description="Add a favorite to a history",
+        responses={404: "slug not found"},
+    )
+    def post(self, request, history__slug=None):
+        profile = self.request.user.profile
         serializer_context = {"request": request}
 
         try:
-            serializer_instance = self.queryset.get(slug=slug)
+            history = History.objects.get(slug=history__slug)
         except History.DoesNotExist:
-            raise NotFound("An history with this slug does not exist.")
+            raise NotFound("An history with this slug was not found.")
 
-        serializer = self.serializer_class(
-            serializer_instance, context=serializer_context
-        )
+        profile.favorite(history)
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        serializer = self.serializer_class(history, context=serializer_context)
 
-    def update(self, request, slug):
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @swagger_auto_schema(
+        operation_description="Remove a favorite to a history",
+        responses={404: "slug not found"},
+    )
+    def delete(self, request, history__slug=None):
+        profile = self.request.user.profile
         serializer_context = {"request": request}
 
         try:
-            serializer_instance = self.queryset.get(slug=slug)
+            history = History.objects.get(slug=history__slug)
         except History.DoesNotExist:
-            raise NotFound("An history with this slug does not exist.")
+            raise NotFound("An history with this slug was not found.")
 
-        serializer_data = request.data.get("history", {})
+        profile.unfavorite(history)
 
-        serializer = self.serializer_class(
-            serializer_instance,
-            context=serializer_context,
-            data=serializer_data,
-            partial=True,
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
+        serializer = self.serializer_class(history, context=serializer_context)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class CommentsListCreateAPIView(generics.ListCreateAPIView):
+class HistoriesFeedAPIView(generics.ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    queryset = History.objects.all()
+    serializer_class = HistorySerializer
 
-    lookup_field = "history__slug"
-    lookup_url_kwarg = "history_slug"
+    def get_queryset(self):
+        return History.objects.filter(
+            author__in=self.request.user.profile.follows.all()
+        )
+
+
+class CommentsListCreateAPIView(
+    mixins.CreateModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet,
+):
+    serializer_class = CommentSerializer
     permission_classes = (IsAuthenticatedOrReadOnly,)
+
     queryset = Comment.objects.select_related(
         "history", "history__author", "history__author__user", "author", "author__user"
     )
-    renderer_classes = (CommentJSONRenderer,)
-    serializer_class = CommentSerializer
+    lookup_field = "history__slug"
 
-    def filter_queryset(self, queryset):
-        # The built-in list function calls `filter_queryset`. Since we only
-        # want comments for a specific history, this is a good place to do
-        # that filtering.
-        filters = {self.lookup_field: self.kwargs[self.lookup_url_kwarg]}
-
-        return queryset.filter(**filters)
-
-    @swagger_auto_schema(
-        operation_description="Create a comment", responses={404: "slug not found"},
-    )
-    def create(self, request, history_slug=None):
-        data = request.data.get("comment", {})
-        context = {"author": request.user.profile}
+    def create(self, request, history__slug=None):
+        data = request.data
+        context = {}
 
         try:
-            context["history"] = History.objects.get(slug=history_slug)
+            context["author"] = Profile.objects.get(user=request.user)
+        except History.DoesNotExist:
+            raise NotFound("An user with this username does not exist.")
+
+        try:
+            context["history"] = History.objects.get(slug=history__slug)
         except History.DoesNotExist:
             raise NotFound("An history with this slug does not exist.")
 
@@ -153,105 +167,12 @@ class CommentsListCreateAPIView(generics.ListCreateAPIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class CommentsDestroyAPIView(generics.DestroyAPIView):
-    lookup_url_kwarg = "comment_pk"
+class CommentsRetrieveDestroyAPIView(
+    mixins.RetrieveModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet,
+):
+    serializer_class = CommentSerializer
     permission_classes = (IsAuthenticatedOrReadOnly,)
-    queryset = Comment.objects.all()
 
-    @swagger_auto_schema(
-        operation_description="Destroy a comment", responses={404: "slug not found"},
+    queryset = Comment.objects.select_related(
+        "history", "history__author", "history__author__user", "author", "author__user"
     )
-    def destroy(self, request, history_slug=None, comment_pk=None):
-        try:
-            comment = Comment.objects.get(pk=comment_pk)
-        except Comment.DoesNotExist:
-            raise NotFound("A comment with this ID does not exist.")
-
-        comment.delete()
-
-        return Response(None, status=status.HTTP_204_NO_CONTENT)
-
-
-class HistoriesFavoriteAPIView(APIView):
-    permission_classes = (IsAuthenticated,)
-    renderer_classes = (HistoryJSONRenderer,)
-    serializer_class = HistorySerializer
-
-    @swagger_auto_schema(
-        operation_description="Delete a favorite history",
-        responses={404: "slug not found"},
-    )
-    def delete(self, request, history_slug=None):
-        profile = self.request.user.profile
-        serializer_context = {"request": request}
-
-        try:
-            history = History.objects.get(slug=history_slug)
-        except History.DoesNotExist:
-            raise NotFound("An history with this slug was not found.")
-
-        profile.unfavorite(history)
-
-        serializer = self.serializer_class(history, context=serializer_context)
-
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    @swagger_auto_schema(
-        operation_description="Create a favorite history",
-        responses={404: "slug not found"},
-    )
-    def post(self, request, history_slug=None):
-        profile = self.request.user.profile
-        serializer_context = {"request": request}
-
-        try:
-            history = History.objects.get(slug=history_slug)
-        except History.DoesNotExist:
-            raise NotFound("An history with this slug was not found.")
-
-        profile.favorite(history)
-
-        serializer = self.serializer_class(history, context=serializer_context)
-
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
-class TagListAPIView(generics.ListAPIView):
-    queryset = Tag.objects.all()
-    pagination_class = None
-    permission_classes = (AllowAny,)
-    serializer_class = TagSerializer
-
-    @swagger_auto_schema(
-        operation_description="List all the tags", responses={404: "slug not found"},
-    )
-    def list(self, request):
-        serializer_data = self.get_queryset()
-        serializer = self.serializer_class(serializer_data, many=True)
-
-        return Response({"tags": serializer.data}, status=status.HTTP_200_OK)
-
-
-class HistoriesFeedAPIView(generics.ListAPIView):
-    permission_classes = (IsAuthenticated,)
-    queryset = History.objects.all()
-    renderer_classes = (HistoryJSONRenderer,)
-    serializer_class = HistorySerializer
-
-    def get_queryset(self):
-        return History.objects.filter(
-            author__in=self.request.user.profile.follows.all()
-        )
-
-    @swagger_auto_schema(
-        operation_description="List all the histories",
-        responses={404: "slug not found"},
-    )
-    def list(self, request):
-        queryset = self.get_queryset()
-        page = self.paginate_queryset(queryset)
-
-        serializer_context = {"request": request}
-        serializer = self.serializer_class(page, context=serializer_context, many=True)
-
-        return self.get_paginated_response(serializer.data)
