@@ -25,7 +25,7 @@ class ProfileRetrieveAPIView(BaseRestTestCase):
         )
         self.assertEqual(200, response.status_code)
         self.assertEqual(
-            ProfileSerializer(instance=self.profile).data,
+            ProfileSerializer(instance=self.user.profile).data,
             response.json().get("profile"),
         )
 
@@ -35,7 +35,7 @@ class ProfileRetrieveAPIView(BaseRestTestCase):
             {"bio": "another bio", "image": "image",},
             HTTP_AUTHORIZATION="Bearer " + self.user.token,
         )
-        profile = Profile.objects.get(id=self.profile.id)
+        profile = Profile.objects.get(user=self.user)
         self.assertEqual(response.json().get("profile").get("bio"), profile.bio)
 
     def test_user_object_partial_update(self):
@@ -44,7 +44,7 @@ class ProfileRetrieveAPIView(BaseRestTestCase):
             {"bio": "another more"},
             HTTP_AUTHORIZATION="Bearer " + self.user.token,
         )
-        profile = Profile.objects.get(id=self.profile.id)
+        profile = Profile.objects.get(id=self.user.profile.id)
         self.assertEqual(
             response.json().get("profile").get("username"), profile.user.username
         )
@@ -55,9 +55,6 @@ class ProfileFollowAPIView(BaseRestTestCase):
         super().setUp()
         self.user_test = User.objects.create_superuser(
             username="jonjon", email="jon@nosnow.com", password="You_know_nothing123"
-        )
-        self.profile_test = Profile.objects.create(
-            user=self.user_test, bio="bio jonjon"
         )
         self.url = reverse(
             "profiles:profile_follow",
@@ -85,6 +82,6 @@ class ProfileFollowAPIView(BaseRestTestCase):
 
         self.assertEqual(200, response.status_code)
         self.assertEqual(
-            ProfileSerializer(instance=self.profile_test).data,
+            ProfileSerializer(instance=self.user_test.profile).data,
             response.json().get("profile"),
         )
