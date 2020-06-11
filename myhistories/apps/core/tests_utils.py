@@ -11,7 +11,5 @@ class BaseRestTestCase(APITestCase):
         self.user = User.objects.create_superuser(
             username="jonsnow", email="jon@snow.com", password="You_know_nothing123"
         )
-        self.profile = Profile.objects.create(user=self.user, bio="bio")
-
         client = APIClient()
         client.force_authenticate(user=self.user.email)
