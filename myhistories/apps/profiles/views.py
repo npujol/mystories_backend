@@ -14,7 +14,7 @@ from .serializers import ProfileSerializer
 
 class ProfileRetrieveUpdateAPIView(RetrieveUpdateAPIView):
     """
-    ProfileRetrieveUpdateAPIView description
+    ProfileRetrieveUpdateAPIView description. It need a username.
 
     retrieve: Retrieve a profile
 
@@ -25,11 +25,11 @@ class ProfileRetrieveUpdateAPIView(RetrieveUpdateAPIView):
     """
 
     permission_classes = (AllowAny, IsAuthenticated)
-    queryset = Profile.objects.select_related("user")
     renderer_classes = (ProfileJSONRenderer,)
     serializer_class = ProfileSerializer
 
     lookup_field = "user__username"
+    queryset = Profile.objects.select_related("user")
 
 
 class ProfileFollowAPIView(APIView):
@@ -39,7 +39,8 @@ class ProfileFollowAPIView(APIView):
     lookup_field = "user__username"
 
     @swagger_auto_schema(
-        operation_description="Fallow a profile", responses={404: "slug not found"},
+        operation_description="Follow a profile. It need a username for the profile to follow",
+        responses={404: "slug not found"},
     )
     def post(self, request, user__username=None):
         follower = self.request.user.profile
@@ -58,7 +59,8 @@ class ProfileFollowAPIView(APIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @swagger_auto_schema(
-        operation_description="Unfallow a profile", responses={404: "slug not found"},
+        operation_description="Unfollow a profile. It need a username for the profile to follow",
+        responses={404: "slug not found"},
     )
     def delete(self, request, user__username=None):
         follower = self.request.user.profile

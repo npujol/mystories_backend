@@ -19,7 +19,7 @@ class RegistrationAPIView(APIView):
     serializer_class = RegistrationSerializer
 
     @swagger_auto_schema(
-        operation_description="Make a new email registration",
+        operation_description="Registration, it need a email and password",
         responses={404: "slug not found"},
     )
     def post(self, request):
@@ -48,7 +48,7 @@ class LoginAPIView(APIView):
 
 class UserRetrieveUpdateAPIView(RetrieveUpdateAPIView):
     """
-    RetrieveUpdateAPIView description
+    UserRetrieveUpdateAPIView description. It need the username.
 
     retrieve: Retrieve a user
 
