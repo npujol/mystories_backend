@@ -52,7 +52,6 @@ class UserRetrieveUpdateAPIView(BaseRestTestCase):
         self.new_user = User.objects.create_user(
             username="notjon", email="nojon@snow.com", password="You_know_nothing123"
         )
-        self.new_profile = Profile.objects.create(user=self.new_user, bio="bio notJon")
         self.url = reverse(
             "authentication:user-detail", kwargs={"username": self.new_user.username}
         )
@@ -74,14 +73,15 @@ class UserRetrieveUpdateAPIView(BaseRestTestCase):
         response = self.client.put(
             self.url,
             {
-                "username": "nottjon",
+                "username": "notjon",
                 "email": "nojon@snow.com",
-                "password": "You_know_nothing123",
-                "profile": model_to_dict(self.new_profile),
+                "password": "You_know_nothing13",
+                "profile": model_to_dict(self.new_user.profile),
             },
             HTTP_AUTHORIZATION="Bearer " + self.user.token,
         )
-        user = User.objects.get(id=self.new_user.id)
+        user = User.objects.get(username=self.new_user.username)
+        print(response.json())
         self.assertEqual(response.json().get("user").get("username"), user.username)
 
     def test_user_object_partial_update(self):

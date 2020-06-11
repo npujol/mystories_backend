@@ -10,4 +10,4 @@ from .models import User
 def create_related_profile(sender, instance, created, *args, **kwargs):
 
     if instance and created:
-        instance.profile = Profile.objects.create(user=instance)
+        instance.profile = Profile.objects.create(user=instance, bio="bio")
