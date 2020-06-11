@@ -139,6 +139,8 @@ AUTH_USER_MODEL = "authentication.User"
 
 REST_FRAMEWORK = {
     "EXCEPTION_HANDLER": "apps.core.exceptions.core_exception_handler",
+    "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer",],
+    "DEFAULT_PARSER_CLASSES": ["rest_framework.parsers.JSONParser"],
     "NON_FIELD_ERRORS_KEY": "error",
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated",],
     "DEFAULT_AUTHENTICATION_CLASSES": (
