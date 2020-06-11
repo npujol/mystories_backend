@@ -8,7 +8,7 @@ class TagRelatedField(serializers.RelatedField):
         return Tag.objects.all()
 
     def to_internal_value(self, data):
-        tag, created = Tag.objects.get_or_create(tag=data, slug=data.lower())
+        tag, created = Tag.objects.get_or_create(tag=data)
 
         return tag
 

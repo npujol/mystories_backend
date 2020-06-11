@@ -38,13 +38,14 @@ class HistorySerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         author = self.context.get("author", None)
-
         tags = validated_data.pop("tags", [])
-
         history = History.objects.create(author=author, **validated_data)
 
         for tag in tags:
-            history.tags.add(tag)
+            obj = Tag.objects.get(tag=tag)
+            if not obj:
+                obj = Tag.objects.create(tag=tag)
+            history.tags.add(obj)
 
         return history
 
@@ -57,7 +58,7 @@ class HistorySerializer(serializers.ModelSerializer):
         if request is None:
             return False
 
-        if not request.user.is_authenticated():
+        if not request.user.is_authenticated:
             return False
 
         return request.user.profile.has_favorited(instance)
@@ -102,6 +103,3 @@ class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = ("tag",)
-
-    def to_representation(self, obj):
-        return obj.tag
