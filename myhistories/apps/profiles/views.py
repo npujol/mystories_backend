@@ -8,7 +8,6 @@ from rest_framework.views import APIView
 from drf_yasg.utils import swagger_auto_schema
 
 from .models import Profile
-from .renderers import ProfileJSONRenderer
 from .serializers import ProfileSerializer
 
 
@@ -25,7 +24,6 @@ class ProfileRetrieveUpdateAPIView(RetrieveUpdateAPIView):
     """
 
     permission_classes = (AllowAny, IsAuthenticated)
-    renderer_classes = (ProfileJSONRenderer,)
     serializer_class = ProfileSerializer
 
     lookup_field = "user__username"
@@ -34,7 +32,6 @@ class ProfileRetrieveUpdateAPIView(RetrieveUpdateAPIView):
 
 class ProfileFollowAPIView(APIView):
     permission_classes = (IsAuthenticated,)
-    renderer_classes = (ProfileJSONRenderer,)
     serializer_class = ProfileSerializer
     lookup_field = "user__username"
 

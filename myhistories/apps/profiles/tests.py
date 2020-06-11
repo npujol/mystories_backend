@@ -25,8 +25,7 @@ class ProfileRetrieveAPIView(BaseRestTestCase):
         )
         self.assertEqual(200, response.status_code)
         self.assertEqual(
-            ProfileSerializer(instance=self.user.profile).data,
-            response.json().get("profile"),
+            ProfileSerializer(instance=self.user.profile).data, response.json(),
         )
 
     def test_profile_object_update(self):
@@ -36,7 +35,7 @@ class ProfileRetrieveAPIView(BaseRestTestCase):
             HTTP_AUTHORIZATION="Bearer " + self.user.token,
         )
         profile = Profile.objects.get(user=self.user)
-        self.assertEqual(response.json().get("profile").get("bio"), profile.bio)
+        self.assertEqual(response.json().get("bio"), profile.bio)
 
     def test_user_object_partial_update(self):
         response = self.client.patch(
@@ -45,9 +44,7 @@ class ProfileRetrieveAPIView(BaseRestTestCase):
             HTTP_AUTHORIZATION="Bearer " + self.user.token,
         )
         profile = Profile.objects.get(id=self.user.profile.id)
-        self.assertEqual(
-            response.json().get("profile").get("username"), profile.user.username
-        )
+        self.assertEqual(response.json().get("username"), profile.user.username)
 
 
 class ProfileFollowAPIView(BaseRestTestCase):
@@ -70,7 +67,7 @@ class ProfileFollowAPIView(BaseRestTestCase):
         )
 
         self.assertEqual(201, response.status_code)
-        self.assertTrue(response.json().get("profile")["following"])
+        self.assertTrue(response.json()["following"])
 
     def test_unfollow_profile(self):
         """
@@ -82,6 +79,5 @@ class ProfileFollowAPIView(BaseRestTestCase):
 
         self.assertEqual(200, response.status_code)
         self.assertEqual(
-            ProfileSerializer(instance=self.user_test.profile).data,
-            response.json().get("profile"),
+            ProfileSerializer(instance=self.user_test.profile).data, response.json(),
         )
