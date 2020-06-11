@@ -81,7 +81,6 @@ class UserRetrieveUpdateAPIView(BaseRestTestCase):
             HTTP_AUTHORIZATION="Bearer " + self.user.token,
         )
         user = User.objects.get(username=self.new_user.username)
-        print(response.json())
         self.assertEqual(response.json().get("user").get("username"), user.username)
 
     def test_user_object_partial_update(self):
