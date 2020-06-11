@@ -43,10 +43,10 @@ INSTALLED_APPS = [
     "django_extensions",
     "rest_framework",
     "drf_yasg",
-    "apps.authentication",
+    "apps.authentication.apps.AuthenticationConfig",
     "apps.core",
     "apps.profiles",
-    "apps.histories",
+    "apps.histories.apps.HistoriesConfig",
 ]
 
 MIDDLEWARE = [
