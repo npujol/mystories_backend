@@ -248,7 +248,6 @@ class CommentListCreateAPIViewTestCase(BaseRestTestCase):
             HTTP_AUTHORIZATION="Bearer " + self.user.token,
         )
 
-        print(response.json())
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(
             Comment.objects.all().count(), (comments_count + 1),

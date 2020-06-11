@@ -8,14 +8,12 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User
-from .renderers import UserJSONRenderer
 from .serializers import LoginSerializer, RegistrationSerializer, UserSerializer
 
 
 class RegistrationAPIView(APIView):
     # Allow any user (authenticated or not) to hit this endpoint.
     permission_classes = (AllowAny,)
-    renderer_classes = (UserJSONRenderer,)
     serializer_class = RegistrationSerializer
 
     @swagger_auto_schema(
@@ -32,7 +30,6 @@ class RegistrationAPIView(APIView):
 
 class LoginAPIView(APIView):
     permission_classes = (AllowAny,)
-    renderer_classes = (UserJSONRenderer,)
     serializer_class = LoginSerializer
 
     @swagger_auto_schema(
@@ -59,7 +56,6 @@ class UserRetrieveUpdateAPIView(RetrieveUpdateAPIView):
     """
 
     permission_classes = (IsAuthenticated,)
-    renderer_classes = (UserJSONRenderer,)
     serializer_class = UserSerializer
 
     lookup_field = "username"

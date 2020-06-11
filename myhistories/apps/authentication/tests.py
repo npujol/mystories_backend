@@ -66,7 +66,7 @@ class UserRetrieveUpdateAPIView(BaseRestTestCase):
         self.assertEqual(200, response.status_code)
         user_serializer_data = UserSerializer(instance=self.new_user).data
         self.assertEqual(
-            user_serializer_data.get("email"), response.json().get("user").get("email")
+            user_serializer_data.get("email"), response.json().get("email")
         )
 
     def test_user_object_update(self):
@@ -81,7 +81,7 @@ class UserRetrieveUpdateAPIView(BaseRestTestCase):
             HTTP_AUTHORIZATION="Bearer " + self.user.token,
         )
         user = User.objects.get(username=self.new_user.username)
-        self.assertEqual(response.json().get("user").get("username"), user.username)
+        self.assertEqual(response.json().get("username"), user.username)
 
     def test_user_object_partial_update(self):
         response = self.client.patch(
@@ -90,4 +90,4 @@ class UserRetrieveUpdateAPIView(BaseRestTestCase):
             HTTP_AUTHORIZATION="Bearer " + self.user.token,
         )
         user = User.objects.get(id=self.new_user.id)
-        self.assertEqual(response.json().get("user").get("username"), user.username)
+        self.assertEqual(response.json().get("username"), user.username)
