@@ -76,6 +76,7 @@ class HistorySerializer(serializers.ModelSerializer):
 
 class CommentSerializer(serializers.ModelSerializer):
     author = ProfileSerializer(required=False)
+    history = HistorySerializer(required=False)
 
     createdAt = serializers.SerializerMethodField(method_name="get_created_at")
     updatedAt = serializers.SerializerMethodField(method_name="get_updated_at")
@@ -85,6 +86,7 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "author",
+            "history",
             "body",
             "createdAt",
             "updatedAt",
@@ -106,4 +108,4 @@ class CommentSerializer(serializers.ModelSerializer):
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
-        fields = ("tag",)
+        fields = ("tag", "pk")
