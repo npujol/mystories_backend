@@ -182,7 +182,6 @@ class HistoryFavoriteAPIViewTestCase(BaseRestTestCase):
         )
 
         self.assertEqual(201, response.status_code)
-        # self.assertTrue(response.json().get("profile")["favorited"])
 
     def test_unfavorite_history(self):
         """

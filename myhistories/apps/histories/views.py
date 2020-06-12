@@ -77,7 +77,6 @@ class TagListAPIView(
 ):
     permission_classes = (AllowAny,)
     serializer_class = TagSerializer
-
     queryset = Tag.objects.all()
 
 
