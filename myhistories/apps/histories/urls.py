@@ -15,8 +15,8 @@ from .views import (
 app_name = "histories"
 
 router = DefaultRouter(trailing_slash=False)
-router.register("api/histories", HistoryViewSet, basename="history")
-router.register("api/tags", TagListAPIView, basename="tag")
+router.register("histories", HistoryViewSet, basename="history")
+router.register("tags", TagListAPIView, basename="tag")
 
 
 urlpatterns = [
@@ -30,7 +30,7 @@ urlpatterns = [
         "histories/feed/", HistoriesFeedAPIView.as_view(), name="histories_feed_list",
     ),
     path(
-        "<str:history__slug>/comments",
+        "histories/<str:history__slug>/comments",
         CommentsListCreateAPIView.as_view({"get": "list", "post": "create"}),
         name="comment_list",
     ),
