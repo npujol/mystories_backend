@@ -22,22 +22,20 @@ router.register("api/tags", TagListAPIView, basename="tag")
 urlpatterns = [
     path("", include(router.urls)),
     path(
-        "api/histories/<str:history__slug>/favorite/",
+        "histories/<str:history__slug>/favorite/",
         HistoriesFavoriteAPIView.as_view(),
         name="history_favorite",
     ),
     path(
-        "api/histories/feed/",
-        HistoriesFeedAPIView.as_view(),
-        name="histories_feed_list",
+        "histories/feed/", HistoriesFeedAPIView.as_view(), name="histories_feed_list",
     ),
     path(
-        "api/<str:history__slug>/comments",
+        "<str:history__slug>/comments",
         CommentsListCreateAPIView.as_view({"get": "list", "post": "create"}),
         name="comment_list",
     ),
     path(
-        "api/histories/<str:history__slug>/comments/<int:pk>",
+        "histories/<str:history__slug>/comments/<int:pk>",
         CommentsRetrieveDestroyAPIView.as_view(
             {"get": "retrieve", "delete": "destroy"}
         ),
