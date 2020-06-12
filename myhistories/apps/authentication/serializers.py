@@ -55,9 +55,6 @@ class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(max_length=128, min_length=8, write_only=True)
     profile = ProfileSerializer(write_only=True)
 
-    bio = serializers.CharField(source="profile.bio", read_only=True)
-    image = serializers.CharField(source="profile.image", read_only=True)
-
     class Meta:
         model = User
         fields = (
@@ -66,8 +63,6 @@ class UserSerializer(serializers.ModelSerializer):
             "password",
             "token",
             "profile",
-            "bio",
-            "image",
         )
 
         read_only_fields = ("token",)
