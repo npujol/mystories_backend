@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 
 import os
 from datetime import timedelta
+from django.utils.translation import ugettext_lazy as _
 
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -108,7 +109,11 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/3.0/topics/i18n/
 
-LANGUAGE_CODE = "en-us, es, de"
+LANGUAGES = (("en", _("English")), ("es", _("Spanish")))
+
+LOCALE_PATHS = (os.path.join(BASE_DIR, "locale"),)
+
+LANGUAGE_CODE = "en"
 
 TIME_ZONE = "UTC"
 
