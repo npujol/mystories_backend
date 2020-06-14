@@ -1,4 +1,6 @@
 from django.db import models
+from django.utils.translation import gettext as _
+
 
 from ..core.models import TimestampedModel
 
@@ -10,10 +12,10 @@ class History(TimestampedModel):
     description = models.TextField()
     body = models.TextField()
     author = models.ForeignKey(
-        "profiles.Profile", on_delete=models.CASCADE, related_name="histories"
+        "profiles.Profile", on_delete=models.CASCADE, related_name=_("histories")
     )
 
-    tags = models.ManyToManyField("histories.Tag", related_name="histories")
+    tags = models.ManyToManyField("histories.Tag", related_name=_("histories"))
 
     def __str__(self):
         return self.title
@@ -23,11 +25,11 @@ class Comment(TimestampedModel):
     body = models.TextField()
 
     history = models.ForeignKey(
-        "histories.History", related_name="comments", on_delete=models.CASCADE
+        "histories.History", related_name=_("comments"), on_delete=models.CASCADE
     )
 
     author = models.ForeignKey(
-        "profiles.Profile", related_name="comments", on_delete=models.CASCADE
+        "profiles.Profile", related_name=_("comments"), on_delete=models.CASCADE
     )
 
 
