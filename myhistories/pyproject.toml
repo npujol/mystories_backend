@@ -12,6 +12,7 @@ django-extensions = "^2.2.9"
 pyjwt = "^1.7.1"
 six = "^1.15.0"
 drf-yasg = "^1.17.1"
+gtts = "^2.1.1"
 
 [tool.poetry.dev-dependencies]
 
