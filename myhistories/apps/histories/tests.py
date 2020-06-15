@@ -304,3 +304,27 @@ class CommentDetailAPIViewTestCase(BaseRestTestCase):
         )
 
         self.assertEqual(204, response.status_code)
+
+
+class HistoryGttsAPIViewTestCase(BaseRestTestCase):
+    def setUp(self):
+        super().setUp()
+        self.history = History.objects.create(
+            author=self.user.profile,
+            title="test",
+            body="body for test",
+            description="description for test",
+        )
+        self.url = reverse(
+            "histories:history_tts", kwargs={"history__slug": self.history.slug}
+        )
+
+    def test_add_gtts_history(self):
+        """
+        Test to create a speech from an history
+        """
+        response = self.client.post(
+            self.url, HTTP_AUTHORIZATION="Bearer " + self.user.token
+        )
+
+        self.assertEqual(202, response.status_code)

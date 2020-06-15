@@ -1,3 +1,5 @@
+from django.contrib.staticfiles.views import serve
+
 from rest_framework import generics, mixins, status, viewsets
 from rest_framework.exceptions import NotFound
 from rest_framework.permissions import (
@@ -13,7 +15,8 @@ from drf_yasg.utils import swagger_auto_schema
 
 from ..profiles.models import Profile
 
-from .models import History, Comment, Tag
+from .utils import TTSHistory
+from .models import History, Comment, Tag, Speech
 from .serializers import HistorySerializer, CommentSerializer, TagSerializer
 
 
@@ -175,3 +178,51 @@ class CommentsRetrieveDestroyAPIView(
     queryset = Comment.objects.select_related(
         "history", "history__author", "history__author__user", "author", "author__user"
     )
+
+
+class HistoryGttsAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = HistorySerializer
+
+    @swagger_auto_schema(
+        operation_description="Create speech to a history",
+        responses={404: "slug not found"},
+    )
+    def post(self, request, history__slug=None):
+        try:
+            history = History.objects.get(slug=history__slug)
+        except History.DoesNotExist:
+            raise NotFound("An history with this slug was not found.")
+
+        speech = Speech.objects.create(history=history, language="en")
+
+        tts = TTSHistory(speech)
+
+        tts.create()
+
+        return Response({"state": "not_ready"}, status=status.HTTP_202_ACCEPTED)
+
+    def get(self, request, history__slug=None):
+        try:
+            history = History.objects.get(slug=history__slug)
+        except History.DoesNotExist:
+            raise NotFound("An history with this slug was not found.")
+
+        try:
+            speech = History.objects.get(history=history)
+        except Speech.DoesNotExist:
+            raise NotFound("A speech with this history was not found.")
+
+        if speech.state:
+            response = serve(
+                request=request,
+                path={"mp3": speech.url_file},
+                content_type="application/force-download",
+                status=HTTP_200_OK,
+            )
+        else:
+            response = Response(
+                {"state": "not ready"}, status=status.HTTP_204_NO_CONTENT
+            )
+
+        return response
