@@ -38,3 +38,14 @@ class Tag(TimestampedModel):
 
     def __str__(self):
         return self.tag
+
+
+class Speech(TimestampedModel):
+    history = models.OneToOneField("histories.History", on_delete=models.CASCADE)
+    language = models.CharField(max_length=255,)
+    url_file = models.URLField(blank=True, null=True)
+    state = models.BooleanField(default=False)
+
+
+def __str__(self):
+    return self.history.slug
