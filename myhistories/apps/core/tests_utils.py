@@ -1,9 +1,12 @@
+from django.conf import settings
+
 from rest_framework.test import APITestCase, APIClient
 from ..profiles.models import Profile
 from ..authentication.models import User
 
 
 class BaseRestTestCase(APITestCase):
+    settings.CELERY_ALWAYS_EAGER = True
     NUMBER_PAGES = 20
 
     def setUp(self):
