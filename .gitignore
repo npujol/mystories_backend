@@ -90,3 +90,10 @@ ENV/
 
 # SQLite3
 db.sqlite3
+
+settings.json
+
+#static
+app/static
+
+*.mp3
