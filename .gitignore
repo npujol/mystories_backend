@@ -92,3 +92,8 @@ ENV/
 db.sqlite3
 
 settings.json
+
+#static
+app/static
+
+*.mp3
