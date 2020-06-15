@@ -333,7 +333,7 @@ class HistoryGttsAPIViewTestCase(BaseRestTestCase):
         """
         Test to create a speech from an history
         """
-        speech = Speech.objects.create(history=self.history, language="en")
+        Speech.objects.create(history=self.history, language="en")
 
         response = self.client.get(
             self.url, HTTP_AUTHORIZATION="Bearer " + self.user.token
