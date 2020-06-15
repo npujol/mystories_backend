@@ -5,6 +5,7 @@ from uuid import uuid4 as uuid
 from gtts import gTTS
 
 from celery import shared_task
+from django.core.files.base import ContentFile
 
 from django.conf import settings
 
@@ -12,7 +13,7 @@ from django.conf import settings
 FOLDER_DIR = path.join(path.dirname(path.abspath(__file__)), "..")
 DIR_NAME = "gTTS"
 TEMP_PATH = path.join(
-    FOLDER_DIR, path.join(getattr(settings, "STATIC_URL", " ")[1:], DIR_NAME)
+    FOLDER_DIR, path.join(getattr(settings, "MEDIA_URL", " ")[1:], DIR_NAME)
 )
 
 
@@ -21,11 +22,8 @@ class TTSHistory:
         self.speech = speech
         self.language = speech.language
         self.history = speech.history
-        self.filename = speech
-
         self.text = self.history_text()
 
-    # @shared_task
     def history_text(self):
         return (" ").join(
             [
@@ -37,33 +35,18 @@ class TTSHistory:
             ]
         )
 
-    # @shared_task
     def create(self):
-        for h, a in {"language": self.language, "text": self.text}.items():
-            if not isinstance(a, str):  # check if receiving a string
-                raise (TypeError("TTSHistory.create(%s) takes string" % h))
 
-        if not path.isdir(TEMP_PATH):  # creating temporary directory
-            makedirs(TEMP_PATH) if version_info.major == 2 else makedirs(
-                # makedirs in py2 missing exist_ok
-                TEMP_PATH,
-                exist_ok=True,
-            )
+        tts = gTTS(text=self.text, lang=self.language)
 
-        tts = (
-            gTTS(self.text)
-            if self.language == "skip"
-            else gTTS(self.text, lang=self.language)
+        self.speech.speech_file.save(
+            self.history.slug + str(uuid()) + ".mp3", ContentFile("")
         )
-        while True:  # making sure audio file name is truly unique
-            fname = str(uuid()) + ".mp3"
-            abp_fname = path.join(TEMP_PATH, fname)
-            if not path.isfile(abp_fname):
-                break
-        tts.save(abp_fname)
 
-        self.speech.url_file = "/".join([DIR_NAME, fname])
-        self.speech.state = True
+        self.speech.speech_file.open("wb")
+        tts.write_to_fp(self.speech.speech_file)
+
+        self.speech.is_ready = True
         self.speech.save()
 
-        return "/".join([DIR_NAME, fname])
+        return "Ready"

@@ -1,4 +1,4 @@
-from django.contrib.staticfiles.views import serve
+from django.shortcuts import redirect
 
 from rest_framework import generics, mixins, status, viewsets
 from rest_framework.exceptions import NotFound
@@ -194,13 +194,13 @@ class HistoryGttsAPIView(APIView):
         except History.DoesNotExist:
             raise NotFound("An history with this slug was not found.")
 
-        speech = Speech.objects.create(history=history, language="en")
+        speech, _ = Speech.objects.get_or_create(history=history, language="en")
 
         tts = TTSHistory(speech)
 
         tts.create()
 
-        return Response({"state": "not_ready"}, status=status.HTTP_202_ACCEPTED)
+        return Response({"link": "Task in progress"}, status=status.HTTP_202_ACCEPTED,)
 
     def get(self, request, history__slug=None):
         try:
@@ -209,20 +209,17 @@ class HistoryGttsAPIView(APIView):
             raise NotFound("An history with this slug was not found.")
 
         try:
-            speech = History.objects.get(history=history)
+            speech = Speech.objects.get(history=history)
         except Speech.DoesNotExist:
             raise NotFound("A speech with this history was not found.")
 
-        if speech.state:
-            response = serve(
-                request=request,
-                path={"mp3": speech.url_file},
-                content_type="application/force-download",
-                status=HTTP_200_OK,
-            )
+        tts = TTSHistory(speech).create()
+
+        if speech.is_ready:
+            response = redirect(speech.speech_file.url)
         else:
             response = Response(
-                {"state": "not ready"}, status=status.HTTP_204_NO_CONTENT
+                {"state": "Not ready"}, status=status.HTTP_204_NO_CONTENT
             )
 
         return response

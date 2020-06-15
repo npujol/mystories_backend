@@ -37,7 +37,7 @@ urlpatterns = [
         name="comment_detail",
     ),
     path(
-        "histories/<str:history__slug>/gtts/",
+        "histories/<str:history__slug>/gtts",
         views.HistoryGttsAPIView.as_view(),
         name="history_tts",
     ),
