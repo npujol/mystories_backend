@@ -18,6 +18,7 @@ from ..profiles.models import Profile
 from .utils import TTSHistory
 from .models import History, Comment, Tag, Speech
 from .serializers import HistorySerializer, CommentSerializer, TagSerializer
+from .tasks import create_speech
 
 
 class HistoryViewSet(viewsets.ModelViewSet):
@@ -194,13 +195,12 @@ class HistoryGttsAPIView(APIView):
         except History.DoesNotExist:
             raise NotFound("An history with this slug was not found.")
 
-        speech, _ = Speech.objects.get_or_create(history=history, language="en")
+        create_speech.delay(history__slug)
 
-        tts = TTSHistory(speech)
-
-        tts.create()
-
-        return Response({"link": "Task in progress"}, status=status.HTTP_202_ACCEPTED,)
+        return Response(
+            {"messages": "We are making the speech! we notify you."},
+            status=status.HTTP_202_ACCEPTED,
+        )
 
     def get(self, request, history__slug=None):
         try:
