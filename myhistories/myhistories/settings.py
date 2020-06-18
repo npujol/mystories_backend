@@ -209,4 +209,8 @@ SIMPLE_JWT = {
 # Celery
 CELERY_RESULT_BACKEND = "django-db"
 CELERY_CACHE_BACKEND = "django-cache"
-CELERY_BROKER_URL = 'amqp://localhost'
+CELERY_BROKER_URL = "amqp://localhost"
+CELERY_ACCEPT_CONTENT = ["application/json"]
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TASK_SERIALIZER = "json"
+
