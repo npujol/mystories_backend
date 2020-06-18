@@ -4,7 +4,7 @@ from .models import Speech, History
 from .utils import TTSHistory
 
 
-@shared_task
+@shared_task(name="Create a speech from an history")
 def create_speech(history__slug):
 
     history = History.objects.get(slug=history__slug)

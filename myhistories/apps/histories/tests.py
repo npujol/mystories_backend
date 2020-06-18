@@ -339,4 +339,4 @@ class HistoryGttsAPIViewTestCase(BaseRestTestCase):
             self.url, HTTP_AUTHORIZATION="Bearer " + self.user.token
         )
 
-        self.assertEqual(302, response.status_code)
+        self.assertEqual(200, response.status_code)
