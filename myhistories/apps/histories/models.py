@@ -1,7 +1,6 @@
-from django.db import models
 from django.conf import settings
+from django.db import models
 from django.utils.translation import gettext as _
-
 
 from ..core.models import TimestampedModel
 
@@ -43,7 +42,7 @@ class Tag(TimestampedModel):
 
 class Speech(TimestampedModel):
     history = models.OneToOneField("histories.History", on_delete=models.CASCADE)
-    language = models.CharField(max_length=255,)
+    language = models.CharField(max_length=255)
     speech_file = models.FileField(upload_to="gTTS/%Y/%m/%d/", null=True, blank=True)
     is_ready = models.BooleanField(default=False)
 

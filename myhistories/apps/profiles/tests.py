@@ -1,10 +1,9 @@
-from rest_framework.test import APITestCase
 from django.urls import reverse
 from rest_framework import status
+from rest_framework.test import APITestCase
 
 from ..authentication.models import User
 from ..core.tests_utils import BaseRestTestCase
-
 from .models import Profile
 from .serializers import ProfileSerializer
 
@@ -25,13 +24,13 @@ class ProfileRetrieveAPIView(BaseRestTestCase):
         )
         self.assertEqual(200, response.status_code)
         self.assertEqual(
-            ProfileSerializer(instance=self.user.profile).data, response.json(),
+            ProfileSerializer(instance=self.user.profile).data, response.json()
         )
 
     def test_profile_object_update(self):
         response = self.client.put(
             self.url,
-            {"bio": "another bio", "image": "image",},
+            {"bio": "another bio", "image": "image"},
             HTTP_AUTHORIZATION="Bearer " + self.user.token,
         )
         profile = Profile.objects.get(user=self.user)
@@ -79,5 +78,5 @@ class ProfileFollowAPIView(BaseRestTestCase):
 
         self.assertEqual(200, response.status_code)
         self.assertEqual(
-            ProfileSerializer(instance=self.user_test.profile).data, response.json(),
+            ProfileSerializer(instance=self.user_test.profile).data, response.json()
         )

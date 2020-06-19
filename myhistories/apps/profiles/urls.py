@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import ProfileRetrieveUpdateAPIView, ProfileFollowAPIView
+from .views import ProfileFollowAPIView, ProfileRetrieveUpdateAPIView
 
 app_name = "profiles"
 

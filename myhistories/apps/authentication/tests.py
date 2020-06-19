@@ -1,19 +1,12 @@
-from django.urls import reverse
 from django.forms.models import model_to_dict
-
-from rest_framework.test import APITestCase
+from django.urls import reverse
 from rest_framework import status
-
+from rest_framework.test import APITestCase
 
 from ..core.tests_utils import BaseRestTestCase
 from ..profiles.models import Profile
-
 from .models import User
-from .serializers import (
-    RegistrationSerializer,
-    LoginSerializer,
-    UserSerializer,
-)
+from .serializers import LoginSerializer, RegistrationSerializer, UserSerializer
 
 
 class RegistrationTestCase(APITestCase):
@@ -44,7 +37,7 @@ class LoginTestCase(BaseRestTestCase):
 
     def test_login_with_email(self):
         response = self.client.post(
-            self.url, {"email": self.user.email, "password": "You_know_nothing123",},
+            self.url, {"email": self.user.email, "password": "You_know_nothing123"}
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)

@@ -1,11 +1,9 @@
-from django.urls import reverse
 from django.forms.models import model_to_dict
-
+from django.urls import reverse
 from rest_framework import status
 
 from ..core.tests_utils import BaseRestTestCase
-
-from .models import Comment, History, Tag, Speech
+from .models import Comment, History, Speech, Tag
 from .serializers import CommentSerializer, HistorySerializer, TagSerializer
 
 
@@ -30,9 +28,7 @@ class HistoryListCreateAPIViewTestCase(BaseRestTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(
-            History.objects.all().count(), (histories_count + 1),
-        )
+        self.assertEqual(History.objects.all().count(), (histories_count + 1))
         self.assertEqual(History.objects.last().title, "string")
 
     def test_list_histories(self):
@@ -45,9 +41,7 @@ class HistoryListCreateAPIViewTestCase(BaseRestTestCase):
             HTTP_AUTHORIZATION="Bearer " + self.user.token,
         )
 
-        self.assertEqual(
-            response.json().get("count"), History.objects.all().count(),
-        )
+        self.assertEqual(response.json().get("count"), History.objects.all().count())
 
 
 class HistoryDetailAPIViewTestCase(BaseRestTestCase):
@@ -72,9 +66,7 @@ class HistoryDetailAPIViewTestCase(BaseRestTestCase):
         )
 
         self.assertEqual(200, response.status_code)
-        self.assertEqual(
-            HistorySerializer(instance=self.history).data, response.json(),
-        )
+        self.assertEqual(HistorySerializer(instance=self.history).data, response.json())
 
     def test_history_object_update(self):
         response = self.client.put(
@@ -103,7 +95,7 @@ class HistoryDetailAPIViewTestCase(BaseRestTestCase):
 
     def test_history_object_delete(self):
         response = self.client.delete(
-            self.url, HTTP_AUTHORIZATION="Bearer " + self.user.token,
+            self.url, HTTP_AUTHORIZATION="Bearer " + self.user.token
         )
 
         self.assertEqual(204, response.status_code)
@@ -117,13 +109,11 @@ class TagListCreateAPIViewTestCase(BaseRestTestCase):
     def test_create_tag(self):
         tags_count = Tag.objects.all().count()
         response = self.client.post(
-            self.url, {"tag": "word"}, HTTP_AUTHORIZATION="Bearer " + self.user.token,
+            self.url, {"tag": "word"}, HTTP_AUTHORIZATION="Bearer " + self.user.token
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(
-            Tag.objects.all().count(), (tags_count + 1),
-        )
+        self.assertEqual(Tag.objects.all().count(), (tags_count + 1))
         self.assertEqual(Tag.objects.last().tag, "word")
 
     def test_list_tags(self):
@@ -136,9 +126,7 @@ class TagListCreateAPIViewTestCase(BaseRestTestCase):
             HTTP_AUTHORIZATION="Bearer " + self.user.token,
         )
 
-        self.assertEqual(
-            response.json().get("count"), Tag.objects.all().count(),
-        )
+        self.assertEqual(response.json().get("count"), Tag.objects.all().count())
 
 
 class TagDetailAPIViewTestCase(BaseRestTestCase):
@@ -155,9 +143,7 @@ class TagDetailAPIViewTestCase(BaseRestTestCase):
             path=self.url, HTTP_AUTHORIZATION="Bearer " + self.user.token
         )
         self.assertEqual(200, response.status_code)
-        self.assertEqual(
-            TagSerializer(instance=self.tag).data, response.json(),
-        )
+        self.assertEqual(TagSerializer(instance=self.tag).data, response.json())
 
 
 class HistoryFavoriteAPIViewTestCase(BaseRestTestCase):
@@ -192,9 +178,7 @@ class HistoryFavoriteAPIViewTestCase(BaseRestTestCase):
         )
 
         self.assertEqual(200, response.status_code)
-        self.assertEqual(
-            HistorySerializer(instance=self.history).data, response.json(),
-        )
+        self.assertEqual(HistorySerializer(instance=self.history).data, response.json())
 
 
 class HistoriesFeedAPIViewTestCase(BaseRestTestCase):
@@ -218,9 +202,7 @@ class HistoriesFeedAPIViewTestCase(BaseRestTestCase):
             HTTP_AUTHORIZATION="Bearer " + self.user.token,
         )
 
-        self.assertEqual(
-            response.json().get("count"), Tag.objects.all().count(),
-        )
+        self.assertEqual(response.json().get("count"), Tag.objects.all().count())
 
 
 class CommentListCreateAPIViewTestCase(BaseRestTestCase):
@@ -243,14 +225,12 @@ class CommentListCreateAPIViewTestCase(BaseRestTestCase):
 
         response = self.client.post(
             self.url,
-            {"body": "string for the body",},
+            {"body": "string for the body"},
             HTTP_AUTHORIZATION="Bearer " + self.user.token,
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(
-            Comment.objects.all().count(), (comments_count + 1),
-        )
+        self.assertEqual(Comment.objects.all().count(), (comments_count + 1))
         self.assertEqual(Comment.objects.last().body, "string for the body")
 
     def test_list_comments(self):
@@ -263,9 +243,7 @@ class CommentListCreateAPIViewTestCase(BaseRestTestCase):
             HTTP_AUTHORIZATION="Bearer " + self.user.token,
         )
 
-        self.assertEqual(
-            response.json().get("count"), Comment.objects.all().count(),
-        )
+        self.assertEqual(response.json().get("count"), Comment.objects.all().count())
 
 
 class CommentDetailAPIViewTestCase(BaseRestTestCase):
@@ -278,7 +256,7 @@ class CommentDetailAPIViewTestCase(BaseRestTestCase):
             description="description for test",
         )
         self.comment = Comment.objects.create(
-            author=self.user.profile, body="body for test", history=self.history,
+            author=self.user.profile, body="body for test", history=self.history
         )
         self.url = reverse(
             "histories:comment_detail",
@@ -294,13 +272,11 @@ class CommentDetailAPIViewTestCase(BaseRestTestCase):
         )
 
         self.assertEqual(200, response.status_code)
-        self.assertEqual(
-            CommentSerializer(instance=self.comment).data, response.json(),
-        )
+        self.assertEqual(CommentSerializer(instance=self.comment).data, response.json())
 
     def test_comment_object_delete(self):
         response = self.client.delete(
-            self.url, HTTP_AUTHORIZATION="Bearer " + self.user.token,
+            self.url, HTTP_AUTHORIZATION="Bearer " + self.user.token
         )
 
         self.assertEqual(204, response.status_code)

@@ -1,8 +1,7 @@
 from rest_framework import serializers
 
 from ..profiles.serializers import ProfileSerializer
-
-from .models import History, Comment, Tag
+from .models import Comment, History, Tag
 from .relations import TagRelatedField
 
 
@@ -83,14 +82,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = (
-            "id",
-            "author",
-            "history",
-            "body",
-            "createdAt",
-            "updatedAt",
-        )
+        fields = ("id", "author", "history", "body", "createdAt", "updatedAt")
 
     def create(self, validated_data):
         history = self.context["history"]

@@ -3,7 +3,6 @@ from django.dispatch import receiver
 from django.utils.text import slugify
 
 from ..core.utils import generate_random_string
-
 from .models import History
 
 
@@ -22,9 +21,6 @@ def add_slug_to_history_if_not_exists(sender, instance, *args, **kwargs):
             parts = slug.split("-")
 
             if len(parts) == 1:
-                # The slug has no hypens. To append the unique string we must
-                # arbitrarly remove `len(unique)` characters from the end of
-                # `slug`. Subtract one to account for extra hyphen.
                 slug = slug[: MAXIMUM_SLUG_LENGTH - len(unique) - 1]
             else:
                 slug = "-".join(parts[:-1])

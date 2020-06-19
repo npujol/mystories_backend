@@ -1,5 +1,5 @@
 from django.shortcuts import redirect
-
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics, mixins, status, viewsets
 from rest_framework.exceptions import NotFound
 from rest_framework.permissions import (
@@ -7,18 +7,15 @@ from rest_framework.permissions import (
     IsAuthenticated,
     IsAuthenticatedOrReadOnly,
 )
-from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
+from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from drf_yasg.utils import swagger_auto_schema
-
 from ..profiles.models import Profile
-
-from .utils import TTSHistory
-from .models import History, Comment, Tag, Speech
-from .serializers import HistorySerializer, CommentSerializer, TagSerializer
+from .models import Comment, History, Speech, Tag
+from .serializers import CommentSerializer, HistorySerializer, TagSerializer
 from .tasks import create_speech
+from .utils import TTSHistory
 
 
 class HistoryViewSet(viewsets.ModelViewSet):
@@ -34,7 +31,7 @@ class HistoryViewSet(viewsets.ModelViewSet):
     create: Create an history
 
     partial_update: Patch an history
-    
+
     destroy: Delete an history
 
     """
@@ -139,7 +136,7 @@ class HistoriesFeedAPIView(generics.ListAPIView):
 
 
 class CommentsListCreateAPIView(
-    mixins.CreateModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet,
+    mixins.CreateModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet
 ):
     serializer_class = CommentSerializer
     permission_classes = (IsAuthenticatedOrReadOnly,)
@@ -171,7 +168,7 @@ class CommentsListCreateAPIView(
 
 
 class CommentsRetrieveDestroyAPIView(
-    mixins.RetrieveModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet,
+    mixins.RetrieveModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet
 ):
     serializer_class = CommentSerializer
     permission_classes = (IsAuthenticatedOrReadOnly,)
