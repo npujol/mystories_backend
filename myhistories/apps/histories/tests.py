@@ -5,7 +5,7 @@ from rest_framework import status
 
 from ..core.tests_utils import BaseRestTestCase
 
-from .models import Comment, History, Tag
+from .models import Comment, History, Tag, Speech
 from .serializers import CommentSerializer, HistorySerializer, TagSerializer
 
 
@@ -328,3 +328,15 @@ class HistoryGttsAPIViewTestCase(BaseRestTestCase):
         )
 
         self.assertEqual(202, response.status_code)
+
+    def test_get_gtts_history(self):
+        """
+        Test to create a speech from an history
+        """
+        Speech.objects.create(history=self.history, language="en")
+
+        response = self.client.get(
+            self.url, HTTP_AUTHORIZATION="Bearer " + self.user.token
+        )
+
+        self.assertEqual(302, response.status_code)

@@ -94,6 +94,7 @@ db.sqlite3
 settings.json
 
 #static
-app/static
+apps/static
+media/
 
 *.mp3

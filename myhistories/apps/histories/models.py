@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 from django.utils.translation import gettext as _
 
 
@@ -43,8 +44,8 @@ class Tag(TimestampedModel):
 class Speech(TimestampedModel):
     history = models.OneToOneField("histories.History", on_delete=models.CASCADE)
     language = models.CharField(max_length=255,)
-    url_file = models.URLField(blank=True, null=True)
-    state = models.BooleanField(default=False)
+    speech_file = models.FileField(upload_to="gTTS/%Y/%m/%d/", null=True, blank=True)
+    is_ready = models.BooleanField(default=False)
 
 
 def __str__(self):
