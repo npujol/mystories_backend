@@ -1,9 +1,7 @@
 from django.contrib.auth import authenticate
-
 from rest_framework import serializers
 
 from ..profiles.serializers import ProfileSerializer
-
 from .models import User
 
 
@@ -30,6 +28,7 @@ class LoginSerializer(serializers.Serializer):
     def validate(self, data):
         email = data.get("email", None)
         password = data.get("password", None)
+
         if email is None:
             raise serializers.ValidationError("An email address is required to log in.")
 
@@ -57,13 +56,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = (
-            "email",
-            "username",
-            "password",
-            "token",
-            "profile",
-        )
+        fields = ("email", "username", "password", "token", "profile")
 
         read_only_fields = ("token",)
 

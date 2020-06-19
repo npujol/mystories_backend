@@ -12,8 +12,8 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 
 import os
 from datetime import timedelta
-from django.utils.translation import ugettext_lazy as _
 
+from django.utils.translation import ugettext_lazy as _
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -75,9 +75,9 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-            ],
+            ]
         },
-    },
+    }
 ]
 
 WSGI_APPLICATION = "myhistories.wsgi.application"
@@ -88,8 +88,11 @@ WSGI_APPLICATION = "myhistories.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "postgres",
+        "HOST": "db",
+        "USER": "postgres",
+        "PASSWORD": "postgres",
     }
 }
 
@@ -99,11 +102,11 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
     },
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",},
-    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",},
-    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
 
@@ -135,19 +138,9 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, "static_files")]
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media/")
 
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
-        "LOCATION": "my_cache_table",
-    }
-}
-
 CORS_ORIGIN_ALLOW_ALL = True
 
-CORS_ORIGIN_WHITELIST = (
-    "0.0.0.0:4000",
-    "localhost:4000",
-)
+CORS_ORIGIN_WHITELIST = ("0.0.0.0:4000", "localhost:4000")
 
 # Tell Django about the custom `User` model we created. The string
 # `authentication.User` tells Django we are referring to the `User` model in
@@ -157,10 +150,10 @@ AUTH_USER_MODEL = "authentication.User"
 
 REST_FRAMEWORK = {
     "EXCEPTION_HANDLER": "apps.core.exceptions.core_exception_handler",
-    "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer",],
+    "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
     "DEFAULT_PARSER_CLASSES": ["rest_framework.parsers.JSONParser"],
     "NON_FIELD_ERRORS_KEY": "error",
-    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated",],
+    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
         "rest_framework.authentication.TokenAuthentication",
@@ -180,7 +173,7 @@ SWAGGER_SETTINGS = {
             "in": "header",
             "name": "Authorization",
             "scheme": "bearer",
-        },
+        }
     },
     "PERSIST_AUTH": True,
 }
@@ -207,6 +200,20 @@ SIMPLE_JWT = {
 
 
 # Celery
-CELERY_RESULT_BACKEND = "django-db"
-CELERY_CACHE_BACKEND = "django-cache"
-CELERY_BROKER_URL = 'amqp://localhost'
+
+CELERY_BROKER_URL = "amqp://admin:mypass@broker:5672"
+CELERY_RESULT_BACKEND = "amqp://admin:mypass@broker:5672"
+CELERY_ACCEPT_CONTENT = ["application/json"]
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TASK_SERIALIZER = "json"
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/1",
+        "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
+    }
+}
+
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+SESSION_CACHE_ALIAS = "default"

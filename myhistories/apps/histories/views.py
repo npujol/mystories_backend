@@ -1,5 +1,5 @@
 from django.shortcuts import redirect
-
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics, mixins, status, viewsets
 from rest_framework.exceptions import NotFound
 from rest_framework.permissions import (
@@ -7,18 +7,15 @@ from rest_framework.permissions import (
     IsAuthenticated,
     IsAuthenticatedOrReadOnly,
 )
-from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
+from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from drf_yasg.utils import swagger_auto_schema
-
 from ..profiles.models import Profile
-
-from .utils import TTSHistory
-from .models import History, Comment, Tag, Speech
-from .serializers import HistorySerializer, CommentSerializer, TagSerializer
+from .models import Comment, History, Speech, Tag
+from .serializers import CommentSerializer, HistorySerializer, TagSerializer
 from .tasks import create_speech
+from .utils import TTSHistory
 
 
 class HistoryViewSet(viewsets.ModelViewSet):
@@ -27,15 +24,15 @@ class HistoryViewSet(viewsets.ModelViewSet):
 
     list: List the histories
 
-    retrieve: Retrieve a history
+    retrieve: Retrieve an history
 
-    update: Update a history
+    update: Update an history
 
-    create: Create a history
+    create: Create an history
 
-    partial_update: Patch a history
-    
-    destroy: Delete a history
+    partial_update: Patch an history
+
+    destroy: Delete an history
 
     """
 
@@ -89,7 +86,7 @@ class HistoriesFavoriteAPIView(APIView):
     serializer_class = HistorySerializer
 
     @swagger_auto_schema(
-        operation_description="Add a favorite to a history",
+        operation_description="Add a favorite to an history",
         responses={404: "slug not found"},
     )
     def post(self, request, history__slug=None):
@@ -108,7 +105,7 @@ class HistoriesFavoriteAPIView(APIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @swagger_auto_schema(
-        operation_description="Remove a favorite to a history",
+        operation_description="Remove a favorite to an history",
         responses={404: "slug not found"},
     )
     def delete(self, request, history__slug=None):
@@ -139,7 +136,7 @@ class HistoriesFeedAPIView(generics.ListAPIView):
 
 
 class CommentsListCreateAPIView(
-    mixins.CreateModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet,
+    mixins.CreateModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet
 ):
     serializer_class = CommentSerializer
     permission_classes = (IsAuthenticatedOrReadOnly,)
@@ -171,7 +168,7 @@ class CommentsListCreateAPIView(
 
 
 class CommentsRetrieveDestroyAPIView(
-    mixins.RetrieveModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet,
+    mixins.RetrieveModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet
 ):
     serializer_class = CommentSerializer
     permission_classes = (IsAuthenticatedOrReadOnly,)
@@ -186,7 +183,7 @@ class HistoryGttsAPIView(APIView):
     serializer_class = HistorySerializer
 
     @swagger_auto_schema(
-        operation_description="Create speech to a history",
+        operation_description="Create speech to an history",
         responses={404: "slug not found"},
     )
     def post(self, request, history__slug=None):
@@ -198,7 +195,7 @@ class HistoryGttsAPIView(APIView):
         create_speech.delay(history__slug)
 
         return Response(
-            {"messages": "We are making the speech! we notify you."},
+            {"messages": "We are making the speech! We notify you."},
             status=status.HTTP_202_ACCEPTED,
         )
 
@@ -211,15 +208,11 @@ class HistoryGttsAPIView(APIView):
         try:
             speech = Speech.objects.get(history=history)
         except Speech.DoesNotExist:
-            raise NotFound("A speech with this history was not found.")
-
-        tts = TTSHistory(speech).create()
+            return Response({"speech": "Not ready"})
 
         if speech.is_ready:
             response = redirect(speech.speech_file.url)
         else:
-            response = Response(
-                {"state": "Not ready"}, status=status.HTTP_204_NO_CONTENT
-            )
+            response = Response({"speech": "Not ready"})
 
         return response

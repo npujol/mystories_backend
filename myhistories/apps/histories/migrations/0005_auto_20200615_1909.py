@@ -5,18 +5,13 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('histories', '0004_speech'),
-    ]
+    dependencies = [("histories", "0004_speech")]
 
     operations = [
-        migrations.RemoveField(
-            model_name='speech',
-            name='url_file',
-        ),
+        migrations.RemoveField(model_name="speech", name="url_file"),
         migrations.AddField(
-            model_name='speech',
-            name='speech_file',
-            field=models.FileField(blank=True, null=True, upload_to='gTTS/%Y/%m/%d/'),
+            model_name="speech",
+            name="speech_file",
+            field=models.FileField(blank=True, null=True, upload_to="gTTS/%Y/%m/%d/"),
         ),
     ]

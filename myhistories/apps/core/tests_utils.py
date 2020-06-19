@@ -1,8 +1,8 @@
 from django.conf import settings
+from rest_framework.test import APIClient, APITestCase
 
-from rest_framework.test import APITestCase, APIClient
-from ..profiles.models import Profile
 from ..authentication.models import User
+from ..profiles.models import Profile
 
 
 class BaseRestTestCase(APITestCase):

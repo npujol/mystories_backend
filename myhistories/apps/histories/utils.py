@@ -1,14 +1,11 @@
-from os import path, makedirs, remove
+from os import makedirs, path, remove
 from sys import version_info
 from uuid import uuid4 as uuid
 
-from gtts import gTTS
-
 from celery import shared_task
-from django.core.files.base import ContentFile
-
 from django.conf import settings
-
+from django.core.files.base import ContentFile
+from gtts import gTTS
 
 FOLDER_DIR = path.join(path.dirname(path.abspath(__file__)), "..")
 DIR_NAME = "gTTS"
