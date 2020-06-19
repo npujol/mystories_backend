@@ -88,8 +88,11 @@ WSGI_APPLICATION = "myhistories.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "postgres",
+        "HOST": "db",
+        "USER": "postgres",
+        "PASSWORD": "postgres",
     }
 }
 
@@ -201,8 +204,8 @@ SIMPLE_JWT = {
 
 # Celery
 
-CELERY_BROKER_URL = "amqp://localhost"
-CELERY_RESULT_BACKEND = "redis://localhost:6379"
+CELERY_BROKER_URL = "amqp://admin:mypass@broker:5672"
+CELERY_RESULT_BACKEND = "amqp://admin:mypass@broker:5672"
 CELERY_ACCEPT_CONTENT = ["application/json"]
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TASK_SERIALIZER = "json"
