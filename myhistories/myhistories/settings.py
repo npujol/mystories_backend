@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "apps.core",
     "apps.profiles",
     "apps.histories.apps.HistoriesConfig",
+    "apps.notifications",
 ]
 
 MIDDLEWARE = [
