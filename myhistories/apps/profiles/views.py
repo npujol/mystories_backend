@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers, status
@@ -43,10 +44,7 @@ class ProfileFollowAPIView(APIView):
     def post(self, request, user__username=None):
         follower = self.request.user.profile
 
-        try:
-            followee = Profile.objects.get(user__username=user__username)
-        except Profile.DoesNotExist:
-            raise NotFound("A profile with this username was not found.")
+        followee = get_object_or_404(Profile, user__username=user__username)
 
         if follower.pk is followee.pk:
             raise serializers.ValidationError("You can not follow yourself.")
@@ -70,10 +68,7 @@ class ProfileFollowAPIView(APIView):
     def delete(self, request, user__username=None):
         follower = self.request.user.profile
 
-        try:
-            followee = Profile.objects.get(user__username=user__username)
-        except Profile.DoesNotExist:
-            raise NotFound("A profile with this username was not found.")
+        followee = get_object_or_404(Profile, user__username=user__username)
 
         follower.unfollow(followee)
         serializer = self.serializer_class(followee, context={"request": request})
