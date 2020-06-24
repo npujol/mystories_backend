@@ -1,4 +1,5 @@
-from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404, redirect
+from django.utils.translation import gettext as _
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics, mixins, status, viewsets
 from rest_framework.exceptions import NotFound
@@ -11,6 +12,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from ..notifications.models import Notification
 from ..profiles.models import Profile
 from .models import Comment, History, Speech, Tag
 from .serializers import CommentSerializer, HistorySerializer, TagSerializer
@@ -44,16 +46,18 @@ class HistoryViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = self.queryset
-
         author = self.request.query_params.get("author", None)
+
         if author is not None:
             queryset = queryset.filter(author__user__username=author)
 
         tag = self.request.query_params.get("tag", None)
+
         if tag is not None:
             queryset = queryset.filter(tags__tag=tag)
 
         favorited_by = self.request.query_params.get("favorited", None)
+
         if favorited_by is not None:
             queryset = queryset.filter(favorited_by__user__username=favorited_by)
 
@@ -93,12 +97,16 @@ class HistoriesFavoriteAPIView(APIView):
         profile = self.request.user.profile
         serializer_context = {"request": request}
 
-        try:
-            history = History.objects.get(slug=history__slug)
-        except History.DoesNotExist:
-            raise NotFound("An history with this slug was not found.")
+        history = get_object_or_404(History, slug=history__slug)
 
         profile.favorite(history)
+
+        Notification.objects.create(
+            title=_("Your story was marked as a favorite."),
+            body=_("{} marks your history: {} as favorite".format(profile, history)),
+            author=profile,
+            receiver=history.author,
+        )
 
         serializer = self.serializer_class(history, context=serializer_context)
 
@@ -112,10 +120,7 @@ class HistoriesFavoriteAPIView(APIView):
         profile = self.request.user.profile
         serializer_context = {"request": request}
 
-        try:
-            history = History.objects.get(slug=history__slug)
-        except History.DoesNotExist:
-            raise NotFound("An history with this slug was not found.")
+        history = get_object_or_404(History, slug=history__slug)
 
         profile.unfavorite(history)
 
@@ -150,19 +155,22 @@ class CommentsListCreateAPIView(
         data = request.data
         context = {}
 
-        try:
-            context["author"] = Profile.objects.get(user=request.user)
-        except History.DoesNotExist:
-            raise NotFound("An user with this username does not exist.")
+        author = get_object_or_404(Profile, user=request.user)
+        history = get_object_or_404(History, slug=history__slug)
 
-        try:
-            context["history"] = History.objects.get(slug=history__slug)
-        except History.DoesNotExist:
-            raise NotFound("An history with this slug does not exist.")
+        context["author"] = author
+        context["history"] = history
 
         serializer = self.serializer_class(data=data, context=context)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+
+        Notification.objects.create(
+            title=_("Your story has a new comment."),
+            body=_("{} comment in your history {}".format(author, history)),
+            author=author,
+            receiver=history.author,
+        )
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -187,32 +195,32 @@ class HistoryGttsAPIView(APIView):
         responses={404: "slug not found"},
     )
     def post(self, request, history__slug=None):
-        try:
-            history = History.objects.get(slug=history__slug)
-        except History.DoesNotExist:
-            raise NotFound("An history with this slug was not found.")
-
-        create_speech.delay(history__slug)
-
-        return Response(
-            {"messages": "We are making the speech! We notify you."},
-            status=status.HTTP_202_ACCEPTED,
-        )
-
-    def get(self, request, history__slug=None):
-        try:
-            history = History.objects.get(slug=history__slug)
-        except History.DoesNotExist:
-            raise NotFound("An history with this slug was not found.")
+        history = get_object_or_404(History, slug=history__slug)
 
         try:
             speech = Speech.objects.get(history=history)
         except Speech.DoesNotExist:
-            return Response({"speech": "Not ready"})
+
+            create_speech.delay(history__slug)
+
+            return Response(
+                {"message": "We are making the speech! We will notify you."},
+                status=status.HTTP_202_ACCEPTED,
+            )
 
         if speech.is_ready:
-            response = redirect(speech.speech_file.url)
-        else:
-            response = Response({"speech": "Not ready"})
+            return Response(
+                {"message": "This history has a speech already"},
+                status=status.HTTP_202_ACCEPTED,
+            )
 
-        return response
+        return Response({"message": "Not ready"}, status=status.HTTP_202_ACCEPTED)
+
+    def get(self, request, history__slug=None):
+        history = get_object_or_404(History, slug=history__slug)
+        speech = get_object_or_404(Speech, history=history)
+
+        if speech.is_ready:
+            return redirect(speech.speech_file.url)
+
+        return Response({"message": "Not ready"})
