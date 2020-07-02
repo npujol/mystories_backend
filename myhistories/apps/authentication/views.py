@@ -16,13 +16,14 @@ class RegistrationAPIView(APIView):
     serializer_class = RegistrationSerializer
 
     @swagger_auto_schema(
-        operation_description="Registration, it need a email and password",
-        responses={404: "slug not found"},
+        # operation_description="Registration, it need a email and password",
+        responses={404: "slug not found", 201: RegistrationSerializer},
+        request_body=RegistrationSerializer
     )
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.save()
+        serializer.save()
 
         return Response(serializer.data, status.HTTP_201_CREATED)
 
