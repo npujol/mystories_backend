@@ -1,3 +1,5 @@
+from django.shortcuts import get_object_or_404
+from django.utils.translation import gettext as _
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers, status
 from rest_framework.exceptions import NotFound
@@ -6,6 +8,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from ..notifications.models import Notification
 from .models import Profile
 from .serializers import ProfileSerializer
 
@@ -41,16 +44,20 @@ class ProfileFollowAPIView(APIView):
     def post(self, request, user__username=None):
         follower = self.request.user.profile
 
-        try:
-            followee = Profile.objects.get(user__username=user__username)
-        except Profile.DoesNotExist:
-            raise NotFound("A profile with this username was not found.")
+        followee = get_object_or_404(Profile, user__username=user__username)
 
         if follower.pk is followee.pk:
             raise serializers.ValidationError("You can not follow yourself.")
 
         follower.follow(followee)
         serializer = self.serializer_class(followee, context={"request": request})
+
+        Notification.objects.create(
+            title=_("You have a new follower"),
+            body=_("{} follows you!".format(follower)),
+            author=follower,
+            receiver=followee,
+        )
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -61,10 +68,7 @@ class ProfileFollowAPIView(APIView):
     def delete(self, request, user__username=None):
         follower = self.request.user.profile
 
-        try:
-            followee = Profile.objects.get(user__username=user__username)
-        except Profile.DoesNotExist:
-            raise NotFound("A profile with this username was not found.")
+        followee = get_object_or_404(Profile, user__username=user__username)
 
         follower.unfollow(followee)
         serializer = self.serializer_class(followee, context={"request": request})

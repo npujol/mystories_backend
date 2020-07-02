@@ -27,6 +27,7 @@ urlpatterns = [
     path("", include("apps.histories.urls", namespace="histories")),
     path("", include("apps.authentication.urls", namespace="authentication")),
     path("", include("apps.profiles.urls", namespace="profiles")),
+    path("", include("apps.notifications.urls", namespace="notifications")),
     url(
         r"^swagger(?P<format>\.json|\.yaml)$",
         schema_view.without_ui(cache_timeout=0),
