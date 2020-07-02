@@ -16,9 +16,8 @@ class RegistrationAPIView(APIView):
     serializer_class = RegistrationSerializer
 
     @swagger_auto_schema(
-        # operation_description="Registration, it need a email and password",
         responses={404: "slug not found", 201: RegistrationSerializer},
-        request_body=RegistrationSerializer
+        request_body=RegistrationSerializer,
     )
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
@@ -33,8 +32,8 @@ class LoginAPIView(APIView):
     serializer_class = LoginSerializer
 
     @swagger_auto_schema(
-        operation_description="Login, it need username or email, and password ",
-        responses={404: "slug not found"},
+        responses={404: "slug not found", 201: LoginSerializer},
+        request_body=LoginSerializer,
     )
     def post(self, request):
         serializer = self.serializer_class(data=request.data)

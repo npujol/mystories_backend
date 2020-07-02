@@ -91,7 +91,8 @@ class HistoriesFavoriteAPIView(APIView):
 
     @swagger_auto_schema(
         operation_description="Add a favorite to an history",
-        responses={404: "slug not found"},
+        responses={404: "slug not found", 201: HistorySerializer},
+        request_body=HistorySerializer,
     )
     def post(self, request, history__slug=None):
         profile = self.request.user.profile
@@ -114,7 +115,8 @@ class HistoriesFavoriteAPIView(APIView):
 
     @swagger_auto_schema(
         operation_description="Remove a favorite to an history",
-        responses={404: "slug not found"},
+        responses={404: "slug not found", 201: HistorySerializer},
+        request_body=HistorySerializer,
     )
     def delete(self, request, history__slug=None):
         profile = self.request.user.profile
@@ -192,13 +194,19 @@ class HistoryGttsAPIView(APIView):
 
     @swagger_auto_schema(
         operation_description="Create speech to an history",
-        responses={404: "slug not found"},
+        responses={404: "slug not found", 201: HistorySerializer},
+        request_body=HistorySerializer,
     )
     def post(self, request, history__slug=None):
         history = get_object_or_404(History, slug=history__slug)
 
         try:
             speech = Speech.objects.get(history=history)
+
+            return Response(
+                {"message": "This history has a speech already"},
+                status=status.HTTP_202_ACCEPTED,
+            )
         except Speech.DoesNotExist:
 
             create_speech.delay(history__slug)
@@ -207,14 +215,6 @@ class HistoryGttsAPIView(APIView):
                 {"message": "We are making the speech! We will notify you."},
                 status=status.HTTP_202_ACCEPTED,
             )
-
-        if speech.is_ready:
-            return Response(
-                {"message": "This history has a speech already"},
-                status=status.HTTP_202_ACCEPTED,
-            )
-
-        return Response({"message": "Not ready"}, status=status.HTTP_202_ACCEPTED)
 
     def get(self, request, history__slug=None):
         history = get_object_or_404(History, slug=history__slug)

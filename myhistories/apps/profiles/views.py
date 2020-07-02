@@ -39,7 +39,8 @@ class ProfileFollowAPIView(APIView):
 
     @swagger_auto_schema(
         operation_description="Follow a profile. It need a username for the profile to follow",
-        responses={404: "slug not found"},
+        responses={404: "slug not found", 201: ProfileSerializer},
+        request_body=ProfileSerializer,
     )
     def post(self, request, user__username=None):
         follower = self.request.user.profile
@@ -63,7 +64,8 @@ class ProfileFollowAPIView(APIView):
 
     @swagger_auto_schema(
         operation_description="Unfollow a profile. It need a username for the profile to follow",
-        responses={404: "slug not found"},
+        responses={404: "slug not found", 201: ProfileSerializer},
+        request_body=ProfileSerializer,
     )
     def delete(self, request, user__username=None):
         follower = self.request.user.profile
