@@ -132,14 +132,9 @@ class HistoriesFavoriteAPIView(APIView):
 
 
 class HistoriesFeedAPIView(generics.ListAPIView):
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (AllowAny,)
     queryset = History.objects.all()
     serializer_class = HistorySerializer
-
-    def get_queryset(self):
-        return History.objects.filter(
-            author__in=self.request.user.profile.follows.all()
-        )
 
 
 class CommentsListCreateAPIView(
