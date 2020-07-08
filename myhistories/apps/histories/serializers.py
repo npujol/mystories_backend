@@ -8,7 +8,7 @@ from .relations import TagRelatedField
 class HistorySerializer(serializers.ModelSerializer):
     author = ProfileSerializer(read_only=True)
     description = serializers.CharField(required=False)
-    slug = serializers.SlugField(required=False)
+    slug = serializers.SlugField(read_only=True)
 
     favorited = serializers.SerializerMethodField()
     favoritesCount = serializers.SerializerMethodField(
