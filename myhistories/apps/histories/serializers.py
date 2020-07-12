@@ -5,17 +5,22 @@ from .models import Comment, History, Tag
 from .relations import TagRelatedField
 
 
+class TagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tag
+        fields = ("tag", "pk")
+
+
 class HistorySerializer(serializers.ModelSerializer):
     author = ProfileSerializer(read_only=True)
     description = serializers.CharField(required=False)
     slug = serializers.SlugField(read_only=True)
+    tags = TagSerializer(many=True, read_only=True)
 
     favorited = serializers.SerializerMethodField()
     favoritesCount = serializers.SerializerMethodField(
         method_name="get_favorites_count"
     )
-
-    tagList = TagRelatedField(many=True, required=False, source="tags")
 
     createdAt = serializers.SerializerMethodField(method_name="get_created_at")
     updatedAt = serializers.SerializerMethodField(method_name="get_updated_at")
@@ -30,7 +35,7 @@ class HistorySerializer(serializers.ModelSerializer):
             "favorited",
             "favoritesCount",
             "slug",
-            "tagList",
+            "tags",
             "title",
             "updatedAt",
         )
@@ -95,9 +100,3 @@ class CommentSerializer(serializers.ModelSerializer):
 
     def get_updated_at(self, instance):
         return instance.updated_at.isoformat()
-
-
-class TagSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Tag
-        fields = ("tag", "pk")
