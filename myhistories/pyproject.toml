@@ -5,7 +5,7 @@ description = ""
 authors = ["npujol <naivy.luna@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.8.0"
+python = "~3.8"
 django-rest-framework = "^0.1.0"
 django-cors-middleware = "^1.5.0"
 django-extensions = "^2.2.9"
@@ -20,6 +20,7 @@ apprise = "^0.8.6"
 psycopg2 = "^2.8.5"
 flower = "^0.9.4"
 djangorestframework_simplejwt = "^4.4.0"
+pillow = "^7.2.0"
 
 [tool.poetry.dev-dependencies]
 
