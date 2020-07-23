@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils.translation import gettext as _
 
 from ..core.models import TimestampedModel
 
@@ -6,7 +7,13 @@ from ..core.models import TimestampedModel
 class Profile(TimestampedModel):
     user = models.OneToOneField("authentication.User", on_delete=models.CASCADE)
     bio = models.TextField(blank=True, null=True)
-    image = models.URLField(blank=True, null=True)
+    image = models.ImageField(
+        _("Avatar"),
+        upload_to="image/%Y/%m/%d/",
+        default="avatar_default.png",
+        null=True,
+        blank=True,
+    )
     follows = models.ManyToManyField(
         "self", related_name="followed_by", symmetrical=False
     )

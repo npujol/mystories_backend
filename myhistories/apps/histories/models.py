@@ -8,7 +8,6 @@ from ..core.models import TimestampedModel
 class History(TimestampedModel):
     slug = models.SlugField(db_index=True, max_length=255, unique=True)
     title = models.CharField(db_index=True, max_length=255)
-
     description = models.TextField()
     body = models.TextField()
     author = models.ForeignKey(
