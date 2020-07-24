@@ -5,18 +5,21 @@ from .models import Comment, History, Tag
 from .relations import TagRelatedField
 
 
+class TagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tag
+        fields = ("tag", "pk")
+
+
 class HistorySerializer(serializers.ModelSerializer):
     author = ProfileSerializer(read_only=True)
-    description = serializers.CharField(required=False)
-    slug = serializers.SlugField(required=False)
+    slug = serializers.SlugField(read_only=True)
+    tags = TagSerializer(many=True, read_only=True)
 
     favorited = serializers.SerializerMethodField()
     favoritesCount = serializers.SerializerMethodField(
         method_name="get_favorites_count"
     )
-
-    tagList = TagRelatedField(many=True, required=False, source="tags")
-
     createdAt = serializers.SerializerMethodField(method_name="get_created_at")
     updatedAt = serializers.SerializerMethodField(method_name="get_updated_at")
 
@@ -25,29 +28,26 @@ class HistorySerializer(serializers.ModelSerializer):
         fields = (
             "author",
             "body",
-            "createdAt",
+            "body_markdown",
+            "language",
+            "image",
             "description",
             "favorited",
             "favoritesCount",
             "slug",
-            "tagList",
+            "tags",
             "title",
+            "createdAt",
             "updatedAt",
         )
 
     def create(self, validated_data):
         author = self.context.get("author", None)
-
         tags = validated_data.pop("tags", [])
-
         history = History.objects.create(author=author, **validated_data)
 
         for tag in tags:
-
-            obj = Tag.objects.get(tag=tag)
-            if not obj:
-                obj = Tag.objects.create(tag=tag)
-
+            obj = Tag.objects.get_or_create(tag=tag)
             history.tags.add(obj)
 
         return history
@@ -58,10 +58,7 @@ class HistorySerializer(serializers.ModelSerializer):
     def get_favorited(self, instance):
         request = self.context.get("request", None)
 
-        if request is None:
-            return False
-
-        if not request.user.is_authenticated:
+        if request is None or not request.user.is_authenticated:
             return False
 
         return request.user.profile.has_favorited(instance)
@@ -76,7 +73,6 @@ class HistorySerializer(serializers.ModelSerializer):
 class CommentSerializer(serializers.ModelSerializer):
     author = ProfileSerializer(required=False)
     history = HistorySerializer(required=False)
-
     createdAt = serializers.SerializerMethodField(method_name="get_created_at")
     updatedAt = serializers.SerializerMethodField(method_name="get_updated_at")
 
@@ -95,9 +91,3 @@ class CommentSerializer(serializers.ModelSerializer):
 
     def get_updated_at(self, instance):
         return instance.updated_at.isoformat()
-
-
-class TagSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Tag
-        fields = ("tag", "pk")

@@ -4,17 +4,36 @@ from django.utils.translation import gettext as _
 
 from ..core.models import TimestampedModel
 
+ENGLISH = "en"
+SPANISH = "es"
+GERMAN = "de"
+
 
 class History(TimestampedModel):
     slug = models.SlugField(db_index=True, max_length=255, unique=True)
     title = models.CharField(db_index=True, max_length=255)
-
-    description = models.TextField()
-    body = models.TextField()
+    language = models.CharField(
+        max_length=2,
+        choices=[
+            (ENGLISH, _("English")),
+            (SPANISH, _("Spanish")),
+            (GERMAN, _("German")),
+        ],
+        default=ENGLISH,
+    )
+    description = models.TextField(null=True, blank=True)
+    body = models.TextField(null=True, blank=True)
+    body_markdown = models.TextField(null=True, blank=True)
+    image = models.ImageField(
+        _("Avatar"),
+        upload_to="image/%Y/%m/%d/",
+        default="history_default.png",
+        null=True,
+        blank=True,
+    )
     author = models.ForeignKey(
         "profiles.Profile", on_delete=models.CASCADE, related_name=_("histories")
     )
-
     tags = models.ManyToManyField("histories.Tag", related_name=_("histories"))
 
     def __str__(self):
@@ -23,11 +42,9 @@ class History(TimestampedModel):
 
 class Comment(TimestampedModel):
     body = models.TextField()
-
     history = models.ForeignKey(
         "histories.History", related_name=_("comments"), on_delete=models.CASCADE
     )
-
     author = models.ForeignKey(
         "profiles.Profile", related_name=_("comments"), on_delete=models.CASCADE
     )

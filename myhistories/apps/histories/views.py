@@ -3,6 +3,7 @@ from django.utils.translation import gettext as _
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics, mixins, status, viewsets
 from rest_framework.exceptions import NotFound
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import (
     AllowAny,
     IsAuthenticated,
@@ -39,6 +40,7 @@ class HistoryViewSet(viewsets.ModelViewSet):
     """
 
     permission_classes = (IsAuthenticatedOrReadOnly,)
+    parser_classes = [MultiPartParser, FormParser]
     serializer_class = HistorySerializer
 
     lookup_field = "slug"
@@ -132,14 +134,9 @@ class HistoriesFavoriteAPIView(APIView):
 
 
 class HistoriesFeedAPIView(generics.ListAPIView):
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (AllowAny,)
     queryset = History.objects.all()
     serializer_class = HistorySerializer
-
-    def get_queryset(self):
-        return History.objects.filter(
-            author__in=self.request.user.profile.follows.all()
-        )
 
 
 class CommentsListCreateAPIView(
