@@ -13,7 +13,6 @@ class TagSerializer(serializers.ModelSerializer):
 
 class HistorySerializer(serializers.ModelSerializer):
     author = ProfileSerializer(read_only=True)
-    description = serializers.CharField(required=False)
     slug = serializers.SlugField(read_only=True)
     tags = TagSerializer(many=True, read_only=True)
 
@@ -21,7 +20,6 @@ class HistorySerializer(serializers.ModelSerializer):
     favoritesCount = serializers.SerializerMethodField(
         method_name="get_favorites_count"
     )
-
     createdAt = serializers.SerializerMethodField(method_name="get_created_at")
     updatedAt = serializers.SerializerMethodField(method_name="get_updated_at")
 
@@ -30,29 +28,26 @@ class HistorySerializer(serializers.ModelSerializer):
         fields = (
             "author",
             "body",
-            "createdAt",
+            "body_markdown",
+            "language",
+            "image",
             "description",
             "favorited",
             "favoritesCount",
             "slug",
             "tags",
             "title",
+            "createdAt",
             "updatedAt",
         )
 
     def create(self, validated_data):
         author = self.context.get("author", None)
-
         tags = validated_data.pop("tags", [])
-
         history = History.objects.create(author=author, **validated_data)
 
         for tag in tags:
-
-            obj = Tag.objects.get(tag=tag)
-            if not obj:
-                obj = Tag.objects.create(tag=tag)
-
+            obj = Tag.objects.get_or_create(tag=tag)
             history.tags.add(obj)
 
         return history
@@ -78,7 +73,6 @@ class HistorySerializer(serializers.ModelSerializer):
 class CommentSerializer(serializers.ModelSerializer):
     author = ProfileSerializer(required=False)
     history = HistorySerializer(required=False)
-
     createdAt = serializers.SerializerMethodField(method_name="get_created_at")
     updatedAt = serializers.SerializerMethodField(method_name="get_updated_at")
 
