@@ -11,7 +11,7 @@ class TagSerializer(serializers.ModelSerializer):
         fields = ("tag", "pk")
 
 
-class HistorySerializer(serializers.ModelSerializer):
+class StorySerializer(serializers.ModelSerializer):
     author = ProfileSerializer(read_only=True)
     slug = serializers.SlugField(read_only=True)
     tags = TagSerializer(many=True, read_only=True)
@@ -72,7 +72,7 @@ class HistorySerializer(serializers.ModelSerializer):
 
 class CommentSerializer(serializers.ModelSerializer):
     author = ProfileSerializer(required=False)
-    story = HistorySerializer(required=False)
+    story = StorySerializer(required=False)
     createdAt = serializers.SerializerMethodField(method_name="get_created_at")
     updatedAt = serializers.SerializerMethodField(method_name="get_updated_at")
 

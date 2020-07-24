@@ -27,7 +27,7 @@ class Story(TimestampedModel):
     image = models.ImageField(
         _("Avatar"),
         upload_to="image/%Y/%m/%d/",
-        default="history_default.png",
+        default="story_default.png",
         null=True,
         blank=True,
     )

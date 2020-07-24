@@ -48,7 +48,7 @@ INSTALLED_APPS = [
     "apps.authentication.apps.AuthenticationConfig",
     "apps.core",
     "apps.profiles",
-    "apps.stories.apps.HistoriesConfig",
+    "apps.stories.apps.StoriesConfig",
     "apps.notifications",
 ]
 

@@ -14,14 +14,14 @@ TEMP_PATH = path.join(
 )
 
 
-class TTSHistory:
+class TTSStory:
     def __init__(self, speech):
         self.speech = speech
         self.language = speech.language
         self.story = speech.story
-        self.text = self.history_text()
+        self.text = self.story_text()
 
-    def history_text(self):
+    def story_text(self):
         return (" ").join(
             [
                 "Title",

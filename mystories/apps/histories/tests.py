@@ -4,17 +4,17 @@ from rest_framework import status
 
 from ..core.tests_utils import BaseRestTestCase
 from .models import Comment, Speech, Story, Tag
-from .serializers import CommentSerializer, HistorySerializer, TagSerializer
+from .serializers import CommentSerializer, StorySerializer, TagSerializer
 
 
-class HistoryListCreateAPIViewTestCase(BaseRestTestCase):
+class StoryListCreateAPIViewTestCase(BaseRestTestCase):
     def setUp(self):
         super().setUp()
 
         self.url = reverse("stories:story-list")
 
-    def test_create_history(self):
-        histories_count = Story.objects.all().count()
+    def test_create_story(self):
+        stories_count = Story.objects.all().count()
 
         response = self.client.post(
             self.url,
@@ -28,10 +28,10 @@ class HistoryListCreateAPIViewTestCase(BaseRestTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Story.objects.all().count(), (histories_count + 1))
+        self.assertEqual(Story.objects.all().count(), (stories_count + 1))
         self.assertEqual(Story.objects.last().title, "string")
 
-    def test_list_histories(self):
+    def test_list_stories(self):
         """
         Test to verify stories list
         """
@@ -44,7 +44,7 @@ class HistoryListCreateAPIViewTestCase(BaseRestTestCase):
         self.assertEqual(response.json().get("count"), Story.objects.all().count())
 
 
-class HistoryDetailAPIViewTestCase(BaseRestTestCase):
+class StoryDetailAPIViewTestCase(BaseRestTestCase):
     def setUp(self):
         super().setUp()
         self.story = Story.objects.create(
@@ -55,7 +55,7 @@ class HistoryDetailAPIViewTestCase(BaseRestTestCase):
         )
         self.url = reverse("stories:story-detail", kwargs={"slug": self.story.slug})
 
-    def test_history_object_detail(self):
+    def test_story_object_detail(self):
         """
         Test to verify a story object detail
         """
@@ -64,9 +64,9 @@ class HistoryDetailAPIViewTestCase(BaseRestTestCase):
         )
 
         self.assertEqual(200, response.status_code)
-        self.assertEqual(HistorySerializer(instance=self.story).data, response.json())
+        self.assertEqual(StorySerializer(instance=self.story).data, response.json())
 
-    def test_history_object_update(self):
+    def test_story_object_update(self):
         response = self.client.put(
             self.url,
             {
@@ -81,7 +81,7 @@ class HistoryDetailAPIViewTestCase(BaseRestTestCase):
         story = Story.objects.get(id=self.story.id)
         self.assertEqual(response.json().get("title"), story.title)
 
-    def test_history_object_partial_update(self):
+    def test_story_object_partial_update(self):
         response = self.client.patch(
             self.url,
             {"body": "another body"},
@@ -91,7 +91,7 @@ class HistoryDetailAPIViewTestCase(BaseRestTestCase):
         story = Story.objects.get(id=self.story.id)
         self.assertEqual(response.json().get("body"), story.body)
 
-    def test_history_object_delete(self):
+    def test_story_object_delete(self):
         response = self.client.delete(
             self.url, HTTP_AUTHORIZATION="Bearer " + self.user.token
         )
@@ -144,7 +144,7 @@ class TagDetailAPIViewTestCase(BaseRestTestCase):
         self.assertEqual(TagSerializer(instance=self.tag).data, response.json())
 
 
-class HistoryFavoriteAPIViewTestCase(BaseRestTestCase):
+class StoryFavoriteAPIViewTestCase(BaseRestTestCase):
     def setUp(self):
         super().setUp()
         self.story = Story.objects.create(
@@ -154,10 +154,10 @@ class HistoryFavoriteAPIViewTestCase(BaseRestTestCase):
             description="description for test",
         )
         self.url = reverse(
-            "stories:history_favorite", kwargs={"history__slug": self.story.slug}
+            "stories:story_favorite", kwargs={"story__slug": self.story.slug}
         )
 
-    def test_favorite_history(self):
+    def test_favorite_story(self):
         """
         Test to favorite story
         """
@@ -167,7 +167,7 @@ class HistoryFavoriteAPIViewTestCase(BaseRestTestCase):
 
         self.assertEqual(201, response.status_code)
 
-    def test_unfavorite_history(self):
+    def test_unfavorite_story(self):
         """
         Test to unfavorite story
         """
@@ -176,10 +176,10 @@ class HistoryFavoriteAPIViewTestCase(BaseRestTestCase):
         )
 
         self.assertEqual(200, response.status_code)
-        self.assertEqual(HistorySerializer(instance=self.story).data, response.json())
+        self.assertEqual(StorySerializer(instance=self.story).data, response.json())
 
 
-class HistoriesFeedAPIViewTestCase(BaseRestTestCase):
+class StoriesFeedAPIViewTestCase(BaseRestTestCase):
     def setUp(self):
         super().setUp()
         self.story = Story.objects.create(
@@ -188,11 +188,11 @@ class HistoriesFeedAPIViewTestCase(BaseRestTestCase):
             body="body for test",
             description="description for test",
         )
-        self.url = reverse("stories:histories_feed_list")
+        self.url = reverse("stories:stories_feed_list")
 
     def test_list_tags(self):
         """
-        Test to verify the HistoriesFeed list
+        Test to verify the StoriesFeed list
         """
         response = self.client.get(
             self.url,
@@ -215,7 +215,7 @@ class CommentListCreateAPIViewTestCase(BaseRestTestCase):
         )
 
         self.url = reverse(
-            "stories:comment_list", kwargs={"history__slug": self.story.slug}
+            "stories:comment_list", kwargs={"story__slug": self.story.slug}
         )
 
     def test_create_comment(self):
@@ -258,7 +258,7 @@ class CommentDetailAPIViewTestCase(BaseRestTestCase):
         )
         self.url = reverse(
             "stories:comment_detail",
-            kwargs={"pk": self.comment.pk, "history__slug": self.story.slug},
+            kwargs={"pk": self.comment.pk, "story__slug": self.story.slug},
         )
 
     def test_comment_object_detail(self):
@@ -280,7 +280,7 @@ class CommentDetailAPIViewTestCase(BaseRestTestCase):
         self.assertEqual(204, response.status_code)
 
 
-class HistoryGttsAPIViewTestCase(BaseRestTestCase):
+class StoryGttsAPIViewTestCase(BaseRestTestCase):
     def setUp(self):
         super().setUp()
         self.story = Story.objects.create(
@@ -289,11 +289,9 @@ class HistoryGttsAPIViewTestCase(BaseRestTestCase):
             body="body for test",
             description="description for test",
         )
-        self.url = reverse(
-            "stories:history_tts", kwargs={"history__slug": self.story.slug}
-        )
+        self.url = reverse("stories:story_tts", kwargs={"story__slug": self.story.slug})
 
-    def test_add_gtts_history(self):
+    def test_add_gtts_story(self):
         """
         Test to create a speech from an story
         """
@@ -303,7 +301,7 @@ class HistoryGttsAPIViewTestCase(BaseRestTestCase):
 
         self.assertEqual(202, response.status_code)
 
-    def test_get_gtts_history(self):
+    def test_get_gtts_story(self):
         """
         Test to create a speech from an story
         """

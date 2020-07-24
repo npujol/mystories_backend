@@ -1,7 +1,7 @@
 from django.apps import AppConfig
 
 
-class HistoriesConfig(AppConfig):
+class StoriesConfig(AppConfig):
     name = "apps.stories"
 
     def ready(self):

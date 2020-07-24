@@ -16,12 +16,12 @@ from rest_framework.views import APIView
 from ..notifications.models import Notification
 from ..profiles.models import Profile
 from .models import Comment, Speech, Story, Tag
-from .serializers import CommentSerializer, HistorySerializer, TagSerializer
+from .serializers import CommentSerializer, StorySerializer, TagSerializer
 from .tasks import create_speech
-from .utils import TTSHistory
+from .utils import TTSStory
 
 
-class HistoryViewSet(viewsets.ModelViewSet):
+class StoryViewSet(viewsets.ModelViewSet):
     """
     General ViewSet description
 
@@ -41,7 +41,7 @@ class HistoryViewSet(viewsets.ModelViewSet):
 
     permission_classes = (IsAuthenticatedOrReadOnly,)
     parser_classes = [MultiPartParser, FormParser]
-    serializer_class = HistorySerializer
+    serializer_class = StorySerializer
 
     lookup_field = "slug"
     queryset = Story.objects.select_related("author", "author__user")
@@ -87,20 +87,20 @@ class TagListAPIView(
     queryset = Tag.objects.all()
 
 
-class HistoriesFavoriteAPIView(APIView):
+class StoriesFavoriteAPIView(APIView):
     permission_classes = (IsAuthenticated,)
-    serializer_class = HistorySerializer
+    serializer_class = StorySerializer
 
     @swagger_auto_schema(
         operation_description="Add a favorite to an story",
-        responses={404: "slug not found", 201: HistorySerializer},
-        request_body=HistorySerializer,
+        responses={404: "slug not found", 201: StorySerializer},
+        request_body=StorySerializer,
     )
-    def post(self, request, history__slug=None):
+    def post(self, request, story__slug=None):
         profile = self.request.user.profile
         serializer_context = {"request": request}
 
-        story = get_object_or_404(Story, slug=history__slug)
+        story = get_object_or_404(Story, slug=story__slug)
 
         profile.favorite(story)
 
@@ -117,14 +117,14 @@ class HistoriesFavoriteAPIView(APIView):
 
     @swagger_auto_schema(
         operation_description="Remove a favorite to an story",
-        responses={404: "slug not found", 201: HistorySerializer},
-        request_body=HistorySerializer,
+        responses={404: "slug not found", 201: StorySerializer},
+        request_body=StorySerializer,
     )
-    def delete(self, request, history__slug=None):
+    def delete(self, request, story__slug=None):
         profile = self.request.user.profile
         serializer_context = {"request": request}
 
-        story = get_object_or_404(Story, slug=history__slug)
+        story = get_object_or_404(Story, slug=story__slug)
 
         profile.unfavorite(story)
 
@@ -133,10 +133,10 @@ class HistoriesFavoriteAPIView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class HistoriesFeedAPIView(generics.ListAPIView):
+class StoriesFeedAPIView(generics.ListAPIView):
     permission_classes = (AllowAny,)
     queryset = Story.objects.all()
-    serializer_class = HistorySerializer
+    serializer_class = StorySerializer
 
 
 class CommentsListCreateAPIView(
@@ -146,16 +146,16 @@ class CommentsListCreateAPIView(
     permission_classes = (IsAuthenticatedOrReadOnly,)
 
     queryset = Comment.objects.select_related(
-        "story", "history__author", "history__author__user", "author", "author__user"
+        "story", "story__author", "story__author__user", "author", "author__user"
     )
-    lookup_field = "history__slug"
+    lookup_field = "story__slug"
 
-    def create(self, request, history__slug=None):
+    def create(self, request, story__slug=None):
         data = request.data
         context = {}
 
         author = get_object_or_404(Profile, user=request.user)
-        story = get_object_or_404(Story, slug=history__slug)
+        story = get_object_or_404(Story, slug=story__slug)
 
         context["author"] = author
         context["story"] = story
@@ -181,21 +181,21 @@ class CommentsRetrieveDestroyAPIView(
     permission_classes = (IsAuthenticatedOrReadOnly,)
 
     queryset = Comment.objects.select_related(
-        "story", "history__author", "history__author__user", "author", "author__user"
+        "story", "story__author", "story__author__user", "author", "author__user"
     )
 
 
-class HistoryGttsAPIView(APIView):
+class StoryGttsAPIView(APIView):
     permission_classes = (IsAuthenticated,)
-    serializer_class = HistorySerializer
+    serializer_class = StorySerializer
 
     @swagger_auto_schema(
         operation_description="Create speech to an story",
-        responses={404: "slug not found", 201: HistorySerializer},
-        request_body=HistorySerializer,
+        responses={404: "slug not found", 201: StorySerializer},
+        request_body=StorySerializer,
     )
-    def post(self, request, history__slug=None):
-        story = get_object_or_404(Story, slug=history__slug)
+    def post(self, request, story__slug=None):
+        story = get_object_or_404(Story, slug=story__slug)
 
         try:
             speech = Speech.objects.get(story=story)
@@ -206,15 +206,15 @@ class HistoryGttsAPIView(APIView):
             )
         except Speech.DoesNotExist:
 
-            create_speech.delay(history__slug)
+            create_speech.delay(story__slug)
 
             return Response(
                 {"message": "We are making the speech! We will notify you."},
                 status=status.HTTP_202_ACCEPTED,
             )
 
-    def get(self, request, history__slug=None):
-        story = get_object_or_404(Story, slug=history__slug)
+    def get(self, request, story__slug=None):
+        story = get_object_or_404(Story, slug=story__slug)
         speech = get_object_or_404(Speech, story=story)
 
         if speech.is_ready:

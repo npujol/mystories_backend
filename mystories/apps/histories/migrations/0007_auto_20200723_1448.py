@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
             name="image",
             field=models.ImageField(
                 blank=True,
-                default="history_default.png",
+                default="story_default.png",
                 null=True,
                 upload_to="image/%Y/%m/%d/",
                 verbose_name="Avatar",
