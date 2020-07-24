@@ -15,7 +15,7 @@ from rest_framework.views import APIView
 
 from ..notifications.models import Notification
 from ..profiles.models import Profile
-from .models import Comment, History, Speech, Tag
+from .models import Comment, Speech, Story, Tag
 from .serializers import CommentSerializer, HistorySerializer, TagSerializer
 from .tasks import create_speech
 from .utils import TTSHistory
@@ -44,7 +44,7 @@ class HistoryViewSet(viewsets.ModelViewSet):
     serializer_class = HistorySerializer
 
     lookup_field = "slug"
-    queryset = History.objects.select_related("author", "author__user")
+    queryset = Story.objects.select_related("author", "author__user")
 
     def get_queryset(self):
         queryset = self.queryset
@@ -100,7 +100,7 @@ class HistoriesFavoriteAPIView(APIView):
         profile = self.request.user.profile
         serializer_context = {"request": request}
 
-        story = get_object_or_404(History, slug=history__slug)
+        story = get_object_or_404(Story, slug=history__slug)
 
         profile.favorite(story)
 
@@ -124,7 +124,7 @@ class HistoriesFavoriteAPIView(APIView):
         profile = self.request.user.profile
         serializer_context = {"request": request}
 
-        story = get_object_or_404(History, slug=history__slug)
+        story = get_object_or_404(Story, slug=history__slug)
 
         profile.unfavorite(story)
 
@@ -135,7 +135,7 @@ class HistoriesFavoriteAPIView(APIView):
 
 class HistoriesFeedAPIView(generics.ListAPIView):
     permission_classes = (AllowAny,)
-    queryset = History.objects.all()
+    queryset = Story.objects.all()
     serializer_class = HistorySerializer
 
 
@@ -155,7 +155,7 @@ class CommentsListCreateAPIView(
         context = {}
 
         author = get_object_or_404(Profile, user=request.user)
-        story = get_object_or_404(History, slug=history__slug)
+        story = get_object_or_404(Story, slug=history__slug)
 
         context["author"] = author
         context["story"] = story
@@ -195,7 +195,7 @@ class HistoryGttsAPIView(APIView):
         request_body=HistorySerializer,
     )
     def post(self, request, history__slug=None):
-        story = get_object_or_404(History, slug=history__slug)
+        story = get_object_or_404(Story, slug=history__slug)
 
         try:
             speech = Speech.objects.get(story=story)
@@ -214,7 +214,7 @@ class HistoryGttsAPIView(APIView):
             )
 
     def get(self, request, history__slug=None):
-        story = get_object_or_404(History, slug=history__slug)
+        story = get_object_or_404(Story, slug=history__slug)
         speech = get_object_or_404(Speech, story=story)
 
         if speech.is_ready:

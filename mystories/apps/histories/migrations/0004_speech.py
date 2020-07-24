@@ -29,8 +29,7 @@ class Migration(migrations.Migration):
                 (
                     "story",
                     models.OneToOneField(
-                        on_delete=django.db.models.deletion.CASCADE,
-                        to="stories.History",
+                        on_delete=django.db.models.deletion.CASCADE, to="stories.Story"
                     ),
                 ),
             ],

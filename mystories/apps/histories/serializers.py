@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from ..profiles.serializers import ProfileSerializer
-from .models import Comment, History, Tag
+from .models import Comment, Story, Tag
 from .relations import TagRelatedField
 
 
@@ -24,7 +24,7 @@ class HistorySerializer(serializers.ModelSerializer):
     updatedAt = serializers.SerializerMethodField(method_name="get_updated_at")
 
     class Meta:
-        model = History
+        model = Story
         fields = (
             "author",
             "body",
@@ -44,7 +44,7 @@ class HistorySerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         author = self.context.get("author", None)
         tags = validated_data.pop("tags", [])
-        story = History.objects.create(author=author, **validated_data)
+        story = Story.objects.create(author=author, **validated_data)
 
         for tag in tags:
             obj = Tag.objects.get_or_create(tag=tag)

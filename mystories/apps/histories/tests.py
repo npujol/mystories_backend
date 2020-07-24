@@ -3,7 +3,7 @@ from django.urls import reverse
 from rest_framework import status
 
 from ..core.tests_utils import BaseRestTestCase
-from .models import Comment, History, Speech, Tag
+from .models import Comment, Speech, Story, Tag
 from .serializers import CommentSerializer, HistorySerializer, TagSerializer
 
 
@@ -14,7 +14,7 @@ class HistoryListCreateAPIViewTestCase(BaseRestTestCase):
         self.url = reverse("stories:story-list")
 
     def test_create_history(self):
-        histories_count = History.objects.all().count()
+        histories_count = Story.objects.all().count()
 
         response = self.client.post(
             self.url,
@@ -28,8 +28,8 @@ class HistoryListCreateAPIViewTestCase(BaseRestTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(History.objects.all().count(), (histories_count + 1))
-        self.assertEqual(History.objects.last().title, "string")
+        self.assertEqual(Story.objects.all().count(), (histories_count + 1))
+        self.assertEqual(Story.objects.last().title, "string")
 
     def test_list_histories(self):
         """
@@ -41,13 +41,13 @@ class HistoryListCreateAPIViewTestCase(BaseRestTestCase):
             HTTP_AUTHORIZATION="Bearer " + self.user.token,
         )
 
-        self.assertEqual(response.json().get("count"), History.objects.all().count())
+        self.assertEqual(response.json().get("count"), Story.objects.all().count())
 
 
 class HistoryDetailAPIViewTestCase(BaseRestTestCase):
     def setUp(self):
         super().setUp()
-        self.story = History.objects.create(
+        self.story = Story.objects.create(
             author=self.user.profile,
             title="test",
             body="body for test",
@@ -78,7 +78,7 @@ class HistoryDetailAPIViewTestCase(BaseRestTestCase):
             HTTP_AUTHORIZATION="Bearer " + self.user.token,
         )
 
-        story = History.objects.get(id=self.story.id)
+        story = Story.objects.get(id=self.story.id)
         self.assertEqual(response.json().get("title"), story.title)
 
     def test_history_object_partial_update(self):
@@ -88,7 +88,7 @@ class HistoryDetailAPIViewTestCase(BaseRestTestCase):
             HTTP_AUTHORIZATION="Bearer " + self.user.token,
         )
 
-        story = History.objects.get(id=self.story.id)
+        story = Story.objects.get(id=self.story.id)
         self.assertEqual(response.json().get("body"), story.body)
 
     def test_history_object_delete(self):
@@ -147,7 +147,7 @@ class TagDetailAPIViewTestCase(BaseRestTestCase):
 class HistoryFavoriteAPIViewTestCase(BaseRestTestCase):
     def setUp(self):
         super().setUp()
-        self.story = History.objects.create(
+        self.story = Story.objects.create(
             author=self.user.profile,
             title="test",
             body="body for test",
@@ -182,7 +182,7 @@ class HistoryFavoriteAPIViewTestCase(BaseRestTestCase):
 class HistoriesFeedAPIViewTestCase(BaseRestTestCase):
     def setUp(self):
         super().setUp()
-        self.story = History.objects.create(
+        self.story = Story.objects.create(
             author=self.user.profile,
             title="test",
             body="body for test",
@@ -207,7 +207,7 @@ class CommentListCreateAPIViewTestCase(BaseRestTestCase):
     def setUp(self):
         super().setUp()
 
-        self.story = History.objects.create(
+        self.story = Story.objects.create(
             author=self.user.profile,
             title="test",
             body="body for test",
@@ -247,7 +247,7 @@ class CommentListCreateAPIViewTestCase(BaseRestTestCase):
 class CommentDetailAPIViewTestCase(BaseRestTestCase):
     def setUp(self):
         super().setUp()
-        self.story = History.objects.create(
+        self.story = Story.objects.create(
             author=self.user.profile,
             title="test",
             body="body for test",
@@ -283,7 +283,7 @@ class CommentDetailAPIViewTestCase(BaseRestTestCase):
 class HistoryGttsAPIViewTestCase(BaseRestTestCase):
     def setUp(self):
         super().setUp()
-        self.story = History.objects.create(
+        self.story = Story.objects.create(
             author=self.user.profile,
             title="test",
             body="body for test",

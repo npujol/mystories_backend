@@ -6,10 +6,10 @@ from rest_framework.exceptions import NotFound
 
 from ..core.utils import generate_random_string
 from ..notifications.models import Notification
-from .models import History, Speech
+from .models import Speech, Story
 
 
-@receiver(pre_save, sender=History)
+@receiver(pre_save, sender=Story)
 def add_slug_to_history_if_not_exists(sender, instance, *args, **kwargs):
     MAXIMUM_SLUG_LENGTH = 255
 

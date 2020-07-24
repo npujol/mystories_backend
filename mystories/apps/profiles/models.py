@@ -18,7 +18,7 @@ class Profile(TimestampedModel):
         "self", related_name="followed_by", symmetrical=False
     )
 
-    favorites = models.ManyToManyField("stories.History", related_name="favorited_by")
+    favorites = models.ManyToManyField("stories.Story", related_name="favorited_by")
 
     def __str__(self):
         return self.user.username

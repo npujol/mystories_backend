@@ -34,7 +34,7 @@ class Migration(migrations.Migration):
                 (
                     "favorites",
                     models.ManyToManyField(
-                        related_name="favorited_by", to="stories.History"
+                        related_name="favorited_by", to="stories.Story"
                     ),
                 ),
                 (

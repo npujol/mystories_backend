@@ -9,7 +9,7 @@ SPANISH = "es"
 GERMAN = "de"
 
 
-class History(TimestampedModel):
+class Story(TimestampedModel):
     slug = models.SlugField(db_index=True, max_length=255, unique=True)
     title = models.CharField(db_index=True, max_length=255)
     language = models.CharField(
@@ -43,7 +43,7 @@ class History(TimestampedModel):
 class Comment(TimestampedModel):
     body = models.TextField()
     story = models.ForeignKey(
-        "stories.History", related_name=_("comments"), on_delete=models.CASCADE
+        "stories.Story", related_name=_("comments"), on_delete=models.CASCADE
     )
     author = models.ForeignKey(
         "profiles.Profile", related_name=_("comments"), on_delete=models.CASCADE
@@ -58,7 +58,7 @@ class Tag(TimestampedModel):
 
 
 class Speech(TimestampedModel):
-    story = models.OneToOneField("stories.History", on_delete=models.CASCADE)
+    story = models.OneToOneField("stories.Story", on_delete=models.CASCADE)
     language = models.CharField(max_length=255)
     speech_file = models.FileField(upload_to="gTTS/%Y/%m/%d/", null=True, blank=True)
     is_ready = models.BooleanField(default=False)
