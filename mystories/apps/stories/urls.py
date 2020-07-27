@@ -14,11 +14,15 @@ router.register("tags", views.TagListAPIView, basename="tag")
 urlpatterns = [
     path("", include(router.urls)),
     path(
-        "stories/<str:story__slug>/favorite/",
+        "stories/<str:story__slug>/favorite",
         views.StoriesFavoriteAPIView.as_view(),
         name="story_favorite",
     ),
-    path("stories/feed/", views.StoriesFeedAPIView.as_view(), name="stories_feed_list"),
+    path(
+        "stories/feed/",
+        views.StoriesFeedAPIView.as_view({"get": "list"}),
+        name="stories_feed_list",
+    ),
     path(
         "stories/<str:story__slug>/comments",
         views.CommentsListCreateAPIView.as_view({"get": "list", "post": "create"}),
@@ -33,7 +37,7 @@ urlpatterns = [
     ),
     path(
         "stories/<str:story__slug>/gtts",
-        views.StoryGttsAPIView.as_view(),
+        views.StoryGttsAPIView.as_view({"get": "retrieve", "post": "create_task"}),
         name="story_tts",
     ),
 ]
