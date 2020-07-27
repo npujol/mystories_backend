@@ -293,7 +293,7 @@ class StoryGttsAPIViewTestCase(BaseRestTestCase):
 
     def test_add_gtts_story(self):
         """
-        Test to create a speech from an story
+        Test to create a speech from a story
         """
         response = self.client.post(
             self.url, HTTP_AUTHORIZATION="Bearer " + self.user.token
@@ -303,7 +303,7 @@ class StoryGttsAPIViewTestCase(BaseRestTestCase):
 
     def test_get_gtts_story(self):
         """
-        Test to create a speech from an story
+        Test to create a speech from a story
         """
         Speech.objects.create(story=self.story, language="en")
 

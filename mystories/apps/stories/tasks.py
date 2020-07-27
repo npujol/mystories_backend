@@ -4,7 +4,7 @@ from .models import Speech, Story
 from .utils import TTSStory
 
 
-@shared_task(name="Create a speech from an story")
+@shared_task(name="Create a speech from a story")
 def create_speech(story__slug):
 
     story = Story.objects.get(slug=story__slug)
