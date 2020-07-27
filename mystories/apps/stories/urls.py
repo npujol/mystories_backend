@@ -18,11 +18,7 @@ urlpatterns = [
         views.StoriesFavoriteAPIView.as_view(),
         name="story_favorite",
     ),
-    path(
-        "stories/feed/",
-        views.StoriesFeedAPIView.as_view({"get": "list"}),
-        name="stories_feed_list",
-    ),
+    path("stories/feed/", views.StoriesFeedAPIView.as_view(), name="stories_feed_list"),
     path(
         "stories/<str:story__slug>/comments",
         views.CommentsListCreateAPIView.as_view({"get": "list", "post": "create"}),

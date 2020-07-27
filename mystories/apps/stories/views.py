@@ -16,7 +16,12 @@ from rest_framework.views import APIView
 from ..notifications.models import Notification
 from ..profiles.models import Profile
 from .models import Comment, Speech, Story, Tag
-from .serializers import CommentSerializer, StorySerializer, TagSerializer
+from .serializers import (
+    CommentSerializer,
+    SpeechSerializer,
+    StorySerializer,
+    TagSerializer,
+)
 from .tasks import create_speech
 from .utils import TTSStory
 
@@ -27,15 +32,15 @@ class StoryViewSet(viewsets.ModelViewSet):
 
     list: List the stories
 
-    retrieve: Retrieve an story
+    retrieve: Retrieve a story
 
-    update: Update an story
+    update: Update a story
 
-    create: Create an story
+    create: Create a story
 
-    partial_update: Patch an story
+    partial_update: Patch a story
 
-    destroy: Delete an story
+    destroy: Delete a story
 
     """
 
@@ -49,20 +54,17 @@ class StoryViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = self.queryset
         author = self.request.query_params.get("author", None)
-
-        if author is not None:
-            queryset = queryset.filter(author__user__username=author)
-
+        favorited_by = self.request.query_params.get("favorited", None)
         tag = self.request.query_params.get("tag", None)
 
-        if tag is not None:
-            queryset = queryset.filter(tags__tag=tag)
+        if author is not None:
+            return queryset.filter(author__user__username=author)
 
-        favorited_by = self.request.query_params.get("favorited", None)
+        if tag is not None:
+            return queryset.filter(tags__tag=tag)
 
         if favorited_by is not None:
-            queryset = queryset.filter(favorited_by__user__username=favorited_by)
-
+            return queryset.filter(favorited_by__user__username=favorited_by)
         return queryset
 
     def create(self, request):
@@ -82,6 +84,19 @@ class TagListAPIView(
     mixins.RetrieveModelMixin,
     viewsets.GenericViewSet,
 ):
+    """
+    General ViewSet description
+
+    list: List the tags
+
+    retrieve: Retrieve a tag
+
+    create: Create a tag
+
+    destroy: Delete a tag
+
+    """
+
     permission_classes = (AllowAny,)
     serializer_class = TagSerializer
     queryset = Tag.objects.all()
@@ -92,7 +107,7 @@ class StoriesFavoriteAPIView(APIView):
     serializer_class = StorySerializer
 
     @swagger_auto_schema(
-        operation_description="Add a favorite to an story",
+        operation_description="Add a favorite to a story",
         responses={404: "slug not found", 201: StorySerializer},
         request_body=StorySerializer,
     )
@@ -116,7 +131,7 @@ class StoriesFavoriteAPIView(APIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @swagger_auto_schema(
-        operation_description="Remove a favorite to an story",
+        operation_description="Remove a favorite to a story",
         responses={404: "slug not found", 201: StorySerializer},
         request_body=StorySerializer,
     )
@@ -134,14 +149,29 @@ class StoriesFavoriteAPIView(APIView):
 
 
 class StoriesFeedAPIView(generics.ListAPIView):
+    """
+    General ViewSet description
+
+    list: List the Stories
+    """
+
     permission_classes = (AllowAny,)
-    queryset = Story.objects.all()
     serializer_class = StorySerializer
+    queryset = Story.objects.all()
 
 
 class CommentsListCreateAPIView(
     mixins.CreateModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet
 ):
+    """
+    General ViewSet description
+
+    list: List the comments
+
+    create: Create a comment
+
+    """
+
     serializer_class = CommentSerializer
     permission_classes = (IsAuthenticatedOrReadOnly,)
 
@@ -177,6 +207,15 @@ class CommentsListCreateAPIView(
 class CommentsRetrieveDestroyAPIView(
     mixins.RetrieveModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet
 ):
+    """
+    General ViewSet description
+
+    retrieve: Retrieve a comment
+
+    destroy: Delete a comment
+
+    """
+
     serializer_class = CommentSerializer
     permission_classes = (IsAuthenticatedOrReadOnly,)
 
@@ -185,16 +224,15 @@ class CommentsRetrieveDestroyAPIView(
     )
 
 
-class StoryGttsAPIView(APIView):
+class StoryGttsAPIView(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     permission_classes = (IsAuthenticated,)
-    serializer_class = StorySerializer
+    serializer_class = SpeechSerializer
+    lookup_field = "story__slug"
 
-    @swagger_auto_schema(
-        operation_description="Create speech to an story",
-        responses={404: "slug not found", 201: StorySerializer},
-        request_body=StorySerializer,
-    )
-    def post(self, request, story__slug=None):
+    queryset = Speech.objects.all()
+
+    @swagger_auto_schema(operation_description="Create speech to a story")
+    def create_task(self, request, story__slug=None):
         story = get_object_or_404(Story, slug=story__slug)
 
         try:
@@ -213,11 +251,11 @@ class StoryGttsAPIView(APIView):
                 status=status.HTTP_202_ACCEPTED,
             )
 
+    @swagger_auto_schema(
+        operation_description="Create speech to a story",
+        responses={404: "slug not found", 201: SpeechSerializer},
+        request_body=SpeechSerializer,
+    )
     def get(self, request, story__slug=None):
         story = get_object_or_404(Story, slug=story__slug)
         speech = get_object_or_404(Speech, story=story)
-
-        if speech.is_ready:
-            return redirect(speech.speech_file.url)
-
-        return Response({"message": "Not ready"})

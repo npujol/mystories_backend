@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from ..profiles.serializers import ProfileSerializer
-from .models import Comment, Story, Tag
+from .models import Comment, Speech, Story, Tag
 from .relations import TagRelatedField
 
 
@@ -52,6 +52,17 @@ class StorySerializer(serializers.ModelSerializer):
 
         return story
 
+    def update(self, instance, validated_data):
+        tags = validated_data.pop("tags", [])
+        print(validated_data, instance, tags)
+        for tag in tags:
+            if not (tag in instance.tags):
+                obj = Tag.objects.get_or_create(tag=tag)
+                instance.tags.add(obj)
+
+        instance = super(StorySerializer, self).update(instance, validated_data)
+        return instance
+
     def get_created_at(self, instance):
         return instance.created_at.isoformat()
 
@@ -85,6 +96,31 @@ class CommentSerializer(serializers.ModelSerializer):
         author = self.context["author"]
 
         return Comment.objects.create(author=author, story=story, **validated_data)
+
+    def get_created_at(self, instance):
+        return instance.created_at.isoformat()
+
+    def get_updated_at(self, instance):
+        return instance.updated_at.isoformat()
+
+
+class SpeechSerializer(serializers.ModelSerializer):
+    story = StorySerializer(required=False)
+
+    createdAt = serializers.SerializerMethodField(method_name="get_created_at")
+    updatedAt = serializers.SerializerMethodField(method_name="get_updated_at")
+
+    class Meta:
+        model = Speech
+        fields = (
+            "id",
+            "story",
+            "language",
+            "speech_file",
+            "is_ready",
+            "createdAt",
+            "updatedAt",
+        )
 
     def get_created_at(self, instance):
         return instance.created_at.isoformat()
