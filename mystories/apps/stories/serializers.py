@@ -15,6 +15,7 @@ class StorySerializer(serializers.ModelSerializer):
     author = ProfileSerializer(read_only=True)
     slug = serializers.SlugField(read_only=True)
     tags = TagSerializer(many=True, read_only=True)
+    image = serializers.FileField(read_only=True)
 
     favorited = serializers.SerializerMethodField()
     favoritesCount = serializers.SerializerMethodField(

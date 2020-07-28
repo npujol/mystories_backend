@@ -2,6 +2,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.utils.translation import gettext as _
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics, mixins, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import (
@@ -45,7 +46,6 @@ class StoryViewSet(viewsets.ModelViewSet):
     """
 
     permission_classes = (IsAuthenticatedOrReadOnly,)
-    parser_classes = [MultiPartParser, FormParser]
     serializer_class = StorySerializer
 
     lookup_field = "slug"
@@ -77,6 +77,52 @@ class StoryViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+    @action(
+        detail=True,
+        methods=["put"],
+        url_path="change_image",
+        url_name="change_image",
+        permission_classes=[IsAuthenticated],
+        parser_classes=[MultiPartParser, FormParser],
+    )
+    def change_image(self, request, slug):
+        obj = self.get_object()
+        obj.image = request.data["image"]
+        obj.save()
+        serializer = self.serializer_class(obj)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["post"], url_path="favorite", url_name="favorite")
+    def favorite(self, request, slug):
+        profile = self.request.user.profile
+        serializer_context = {"request": request}
+        story = self.get_object()
+        profile.favorite(story)
+
+        Notification.objects.create(
+            title=_("Your story was marked as a favorite."),
+            body=_("{} marks your story: {} as favorite".format(profile, story)),
+            author=profile,
+            receiver=story.author,
+        )
+
+        serializer = self.serializer_class(story, context=serializer_context)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(
+        detail=True, methods=["delete"], url_path="unfavorite", url_name="unfavorite"
+    )
+    def remove_favorite(self, request, slug):
+        profile = self.request.user.profile
+        serializer_context = {"request": request}
+        story = self.get_object()
+
+        profile.unfavorite(story)
+        serializer = self.serializer_class(story, context=serializer_context)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class TagListAPIView(
     mixins.CreateModelMixin,
@@ -102,52 +148,6 @@ class TagListAPIView(
     queryset = Tag.objects.all()
 
 
-class StoriesFavoriteAPIView(APIView):
-    permission_classes = (IsAuthenticated,)
-    serializer_class = StorySerializer
-
-    @swagger_auto_schema(
-        operation_description="Add a favorite to a story",
-        responses={404: "slug not found", 201: StorySerializer},
-        request_body=StorySerializer,
-    )
-    def post(self, request, story__slug=None):
-        profile = self.request.user.profile
-        serializer_context = {"request": request}
-
-        story = get_object_or_404(Story, slug=story__slug)
-
-        profile.favorite(story)
-
-        Notification.objects.create(
-            title=_("Your story was marked as a favorite."),
-            body=_("{} marks your story: {} as favorite".format(profile, story)),
-            author=profile,
-            receiver=story.author,
-        )
-
-        serializer = self.serializer_class(story, context=serializer_context)
-
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    @swagger_auto_schema(
-        operation_description="Remove a favorite to a story",
-        responses={404: "slug not found", 201: StorySerializer},
-        request_body=StorySerializer,
-    )
-    def delete(self, request, story__slug=None):
-        profile = self.request.user.profile
-        serializer_context = {"request": request}
-
-        story = get_object_or_404(Story, slug=story__slug)
-
-        profile.unfavorite(story)
-
-        serializer = self.serializer_class(story, context=serializer_context)
-
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-
 class StoriesFeedAPIView(generics.ListAPIView):
     """
     General ViewSet description
@@ -161,7 +161,11 @@ class StoriesFeedAPIView(generics.ListAPIView):
 
 
 class CommentsListCreateAPIView(
-    mixins.CreateModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
 ):
     """
     General ViewSet description

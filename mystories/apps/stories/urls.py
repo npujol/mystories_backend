@@ -13,11 +13,11 @@ router.register("tags", views.TagListAPIView, basename="tag")
 
 urlpatterns = [
     path("", include(router.urls)),
-    path(
-        "stories/<str:story__slug>/favorite",
-        views.StoriesFavoriteAPIView.as_view(),
-        name="story_favorite",
-    ),
+    # path(
+    #     "stories/<str:story__slug>/favorite",
+    #     views.StoriesFavoriteAPIView.as_view(),
+    #     name="story_favorite",
+    # ),
     path("stories/feed/", views.StoriesFeedAPIView.as_view(), name="stories_feed_list"),
     path(
         "stories/<str:story__slug>/comments",
