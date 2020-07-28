@@ -1,18 +1,11 @@
+from django.conf.urls import include
 from django.urls import path
+from rest_framework.routers import DefaultRouter
 
-from .views import ProfileFollowAPIView, ProfileRetrieveUpdateAPIView
+from .views import ProfileRetrieveUpdateAPIView
 
 app_name = "profiles"
+router = DefaultRouter(trailing_slash=False)
+router.register("profiles", ProfileRetrieveUpdateAPIView, basename="profile_detail")
 
-urlpatterns = [
-    path(
-        "profiles/<str:user__username>",
-        ProfileRetrieveUpdateAPIView.as_view(),
-        name="profile_detail",
-    ),
-    path(
-        "profiles/<str:user__username>/follow",
-        ProfileFollowAPIView.as_view(),
-        name="profile_follow",
-    ),
-]
+urlpatterns = [path("", include(router.urls))]

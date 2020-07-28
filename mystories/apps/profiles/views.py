@@ -1,22 +1,22 @@
-from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
-from drf_yasg.utils import swagger_auto_schema
-from rest_framework import serializers, status
-from rest_framework.exceptions import NotFound
-from rest_framework.generics import RetrieveUpdateAPIView
+from rest_framework import serializers, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from ..notifications.models import Notification
 from .models import Profile
 from .serializers import ProfileSerializer
 
 
-class ProfileRetrieveUpdateAPIView(RetrieveUpdateAPIView):
+class ProfileRetrieveUpdateAPIView(
+    viewsets.GenericViewSet,
+    viewsets.mixins.RetrieveModelMixin,
+    viewsets.mixins.UpdateModelMixin,
+):
     """
-    ProfileRetrieveUpdateAPIView description. It need a username.
+    General description. It need a username.
 
     retrieve: Retrieve a profile
 
@@ -28,26 +28,34 @@ class ProfileRetrieveUpdateAPIView(RetrieveUpdateAPIView):
 
     permission_classes = (AllowAny, IsAuthenticated)
     serializer_class = ProfileSerializer
-    parser_classes = [MultiPartParser, FormParser]
 
     lookup_field = "user__username"
     queryset = Profile.objects.select_related("user")
 
-
-class ProfileFollowAPIView(APIView):
-    permission_classes = (IsAuthenticated,)
-    serializer_class = ProfileSerializer
-    lookup_field = "user__username"
-
-    @swagger_auto_schema(
-        operation_description="Follow a profile. It need a username for the profile to follow",
-        responses={404: "slug not found", 201: ProfileSerializer},
-        request_body=ProfileSerializer,
+    @action(
+        detail=True,
+        methods=["put"],
+        url_path="change_image",
+        url_name="change_image",
+        permission_classes=[IsAuthenticated],
+        parser_classes=[MultiPartParser, FormParser],
     )
-    def post(self, request, user__username=None):
-        follower = self.request.user.profile
+    def change_image(self, request, user__username):
+        obj = self.get_object()
+        obj.image = request.data["image"]
+        obj.save()
+        serializer = self.serializer_class(obj)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
-        followee = get_object_or_404(Profile, user__username=user__username)
+    @action(
+        detail=True,
+        methods=["post"],
+        url_path="follow_profile",
+        url_name="follow_profile",
+    )
+    def follow_profile(self, request, user__username):
+        follower = self.request.user.profile
+        followee = self.get_object()
 
         if follower.pk is followee.pk:
             raise serializers.ValidationError("You can not follow yourself.")
@@ -64,16 +72,15 @@ class ProfileFollowAPIView(APIView):
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @swagger_auto_schema(
-        operation_description="Unfollow a profile. It need a username for the profile to follow",
-        responses={404: "slug not found", 201: ProfileSerializer},
-        request_body=ProfileSerializer,
+    @action(
+        detail=True,
+        methods=["delete"],
+        url_path="unfollow_profile",
+        url_name="unfollow_profile",
     )
-    def delete(self, request, user__username=None):
+    def unfollow_profile(self, request, user__username):
         follower = self.request.user.profile
-
-        followee = get_object_or_404(Profile, user__username=user__username)
-
+        followee = self.get_object()
         follower.unfollow(followee)
         serializer = self.serializer_class(followee, context={"request": request})
 
