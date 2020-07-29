@@ -80,20 +80,18 @@ class StoryViewSet(viewsets.ModelViewSet):
     @action(
         detail=True,
         methods=["put"],
-        url_path="change_image",
-        url_name="change_image",
         permission_classes=[IsAuthenticated],
         parser_classes=[MultiPartParser, FormParser],
     )
-    def change_image(self, request, slug):
+    def change_image(self, request, slug=None):
         obj = self.get_object()
         obj.image = request.data["image"]
         obj.save()
         serializer = self.serializer_class(obj)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=["post"], url_path="favorite", url_name="favorite")
-    def favorite(self, request, slug):
+    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
+    def favorite(self, request, slug=None):
         profile = self.request.user.profile
         serializer_context = {"request": request}
         story = self.get_object()
@@ -110,10 +108,8 @@ class StoryViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @action(
-        detail=True, methods=["delete"], url_path="unfavorite", url_name="unfavorite"
-    )
-    def remove_favorite(self, request, slug):
+    @action(detail=True, methods=["delete"], permission_classes=[IsAuthenticated])
+    def unfavorite(self, request, slug=None):
         profile = self.request.user.profile
         serializer_context = {"request": request}
         story = self.get_object()
@@ -123,8 +119,8 @@ class StoryViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=["post"], url_path="make_audio", url_name="make_audio")
-    def create_task(self, request, slug=None):
+    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
+    def make_audio(self, request, slug=None):
         story = self.get_object()
 
         try:
@@ -143,8 +139,8 @@ class StoryViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_202_ACCEPTED,
             )
 
-    @action(detail=True, methods=["get"], url_path="audio", url_name="audio")
-    def get(self, request, slug=None):
+    @action(detail=True, methods=["get"], permission_classes=[IsAuthenticated])
+    def get_audio(self, request, slug=None):
         story = self.get_object()
         speech = get_object_or_404(Speech, story=story)
 

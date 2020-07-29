@@ -5,8 +5,9 @@ from rest_framework.routers import DefaultRouter
 from . import views
 
 app_name = "authentication"
+
 router = DefaultRouter(trailing_slash=False)
-router.register("users", views.UserRetrieveUpdateAPIView, basename="user_detail")
+router.register("users", views.UserRetrieveUpdateAPIView, basename="user")
 router.register("auth/login", views.LoginAPIView, basename="login")
 router.register("auth/registration", views.RegistrationAPIView, basename="registration")
 

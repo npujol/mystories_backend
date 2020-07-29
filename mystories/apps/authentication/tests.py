@@ -11,7 +11,7 @@ from .serializers import LoginSerializer, RegistrationSerializer, UserSerializer
 
 class RegistrationTestCase(APITestCase):
     def setUp(self):
-        self.url = reverse("authentication:registration")
+        self.url = reverse("authentication:registration-list")
 
     def test_registration(self):
         users_count = User.objects.count()
@@ -33,7 +33,7 @@ class RegistrationTestCase(APITestCase):
 class LoginTestCase(BaseRestTestCase):
     def setUp(self):
         super().setUp()
-        self.url = reverse("authentication:login")
+        self.url = reverse("authentication:login-list")
 
     def test_login_with_email(self):
         response = self.client.post(
@@ -68,28 +68,3 @@ class UserRetrieveUpdateAPIView(BaseRestTestCase):
         self.assertEqual(
             user_serializer_data.get("email"), response.json().get("email")
         )
-
-    def test_user_object_update(self):
-        response = self.client.put(
-            self.url,
-            {
-                "username": "notjon",
-                "email": "nojon@snow.com",
-                "password": "You_know_nothing13",
-                "profile": model_to_dict(self.new_user.profile),
-            },
-            HTTP_AUTHORIZATION="Bearer " + self.user.token,
-        )
-
-        user = User.objects.get(username=self.new_user.username)
-        self.assertEqual(response.json().get("username"), user.username)
-
-    def test_user_object_partial_update(self):
-        response = self.client.patch(
-            self.url,
-            {"username": "notjon"},
-            HTTP_AUTHORIZATION="Bearer " + self.user.token,
-        )
-
-        user = User.objects.get(id=self.new_user.id)
-        self.assertEqual(response.json().get("username"), user.username)

@@ -12,7 +12,7 @@ class NotificationListCreateAPIViewTestCase(BaseRestTestCase):
         super().setUp()
         self.url = reverse("notifications:notification-list")
 
-    def test_create_story(self):
+    def test_create_notification(self):
         notifications_count = Notification.objects.all().count()
 
         response = self.client.post(
@@ -20,11 +20,10 @@ class NotificationListCreateAPIViewTestCase(BaseRestTestCase):
             {
                 "title": "string",
                 "body": "string for the body",
-                "receiver": model_to_dict(self.user.profile),
+                "receiver": self.user.profile.pk,
             },
             HTTP_AUTHORIZATION="Bearer " + self.user.token,
         )
-
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Notification.objects.all().count(), (notifications_count + 1))
         self.assertEqual(Notification.objects.last().title, "string")
@@ -57,7 +56,7 @@ class NotificationDetailAPIViewTestCase(BaseRestTestCase):
             "notifications:notification-detail", kwargs={"pk": self.notification.pk}
         )
 
-    def test_story_object_detail(self):
+    def test_notification_object_detail(self):
         """
         Test to verify a notification object detail
         """
@@ -71,13 +70,13 @@ class NotificationDetailAPIViewTestCase(BaseRestTestCase):
             response.json().get("pk"),
         )
 
-    def test_story_object_update(self):
+    def test_notification_object_update(self):
         response = self.client.put(
             self.url,
             {
                 "title": "string",
                 "body": "string for the body",
-                "receiver": model_to_dict(self.user.profile),
+                "receiver": self.user.profile.pk,
             },
             HTTP_AUTHORIZATION="Bearer " + self.user.token,
         )
@@ -85,7 +84,7 @@ class NotificationDetailAPIViewTestCase(BaseRestTestCase):
         notification = Notification.objects.get(id=self.notification.id)
         self.assertEqual(response.json().get("title"), notification.title)
 
-    def test_story_object_partial_update(self):
+    def test_notification_object_partial_update(self):
         response = self.client.patch(
             self.url,
             {"body": "another body"},
@@ -95,7 +94,7 @@ class NotificationDetailAPIViewTestCase(BaseRestTestCase):
         notification = Notification.objects.get(id=self.notification.id)
         self.assertEqual(response.json().get("body"), notification.body)
 
-    def test_story_object_delete(self):
+    def test_notification_object_delete(self):
         response = self.client.delete(
             self.url, HTTP_AUTHORIZATION="Bearer " + self.user.token
         )

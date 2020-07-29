@@ -11,7 +11,7 @@ router.register("stories", views.StoryViewSet, basename="story")
 router.register("tags", views.TagListAPIView, basename="tag")
 
 stories_router = routers.NestedSimpleRouter(router, "stories", lookup="story")
-stories_router.register("comments", views.CommentsAPIView, basename="story_comment")
+stories_router.register("comments", views.CommentsAPIView, basename="comment")
 
 
 urlpatterns = [

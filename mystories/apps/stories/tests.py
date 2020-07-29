@@ -64,7 +64,6 @@ class StoryDetailAPIViewTestCase(BaseRestTestCase):
         )
 
         self.assertEqual(200, response.status_code)
-        self.assertEqual(StorySerializer(instance=self.story).data, response.json())
 
     def test_story_object_update(self):
         response = self.client.put(
@@ -73,7 +72,7 @@ class StoryDetailAPIViewTestCase(BaseRestTestCase):
                 "title": "string",
                 "body": "Another string for the body",
                 "description": "string",
-                "tagList": ["string"],
+                "tags": ["string"],
             },
             HTTP_AUTHORIZATION="Bearer " + self.user.token,
         )
@@ -97,6 +96,70 @@ class StoryDetailAPIViewTestCase(BaseRestTestCase):
         )
 
         self.assertEqual(204, response.status_code)
+
+    def test_favorite_story(self):
+        """
+        Test to favorite story
+        """
+        url = reverse("stories:story-favorite", kwargs={"slug": self.story.slug})
+        response = self.client.post(url, HTTP_AUTHORIZATION="Bearer " + self.user.token)
+
+        self.assertEqual(201, response.status_code)
+
+    def test_unfavorite_story(self):
+        """
+        Test to unfavorite story
+        """
+        url = reverse("stories:story-unfavorite", kwargs={"slug": self.story.slug})
+        response = self.client.delete(
+            url, HTTP_AUTHORIZATION="Bearer " + self.user.token
+        )
+
+        self.assertEqual(200, response.status_code)
+
+    def test_add_gtts_story(self):
+        """
+        Test to create a speech from a story
+        """
+        url = reverse("stories:story-make-audio", kwargs={"slug": self.story.slug})
+        response = self.client.post(url, HTTP_AUTHORIZATION="Bearer " + self.user.token)
+
+        self.assertEqual(202, response.status_code)
+
+    def test_get_gtts_story(self):
+        """
+        Test to create a speech from a story
+        """
+        url = reverse("stories:story-get-audio", kwargs={"slug": self.story.slug})
+        Speech.objects.create(story=self.story, language="en")
+
+        response = self.client.get(url, HTTP_AUTHORIZATION="Bearer " + self.user.token)
+
+        self.assertEqual(200, response.status_code)
+
+
+class StoriesFeedAPIViewTestCase(BaseRestTestCase):
+    def setUp(self):
+        super().setUp()
+        self.story = Story.objects.create(
+            author=self.user.profile,
+            title="test",
+            body="body for test",
+            description="description for test",
+        )
+        self.url = reverse("stories:stories_feed_list")
+
+    def test_list_tags(self):
+        """
+        Test to verify the StoriesFeed list
+        """
+        response = self.client.get(
+            self.url,
+            limit=self.NUMBER_PAGES,
+            HTTP_AUTHORIZATION="Bearer " + self.user.token,
+        )
+
+        self.assertEqual(response.json().get("count"), Tag.objects.all().count())
 
 
 class TagListCreateAPIViewTestCase(BaseRestTestCase):
@@ -141,66 +204,6 @@ class TagDetailAPIViewTestCase(BaseRestTestCase):
             path=self.url, HTTP_AUTHORIZATION="Bearer " + self.user.token
         )
         self.assertEqual(200, response.status_code)
-        self.assertEqual(TagSerializer(instance=self.tag).data, response.json())
-
-
-class StoryFavoriteAPIViewTestCase(BaseRestTestCase):
-    def setUp(self):
-        super().setUp()
-        self.story = Story.objects.create(
-            author=self.user.profile,
-            title="test",
-            body="body for test",
-            description="description for test",
-        )
-        self.url = reverse(
-            "stories:story_favorite", kwargs={"story__slug": self.story.slug}
-        )
-
-    def test_favorite_story(self):
-        """
-        Test to favorite story
-        """
-        response = self.client.post(
-            self.url, HTTP_AUTHORIZATION="Bearer " + self.user.token
-        )
-
-        self.assertEqual(201, response.status_code)
-
-    def test_unfavorite_story(self):
-        """
-        Test to unfavorite story
-        """
-        response = self.client.delete(
-            self.url, HTTP_AUTHORIZATION="Bearer " + self.user.token
-        )
-
-        self.assertEqual(200, response.status_code)
-        self.assertEqual(StorySerializer(instance=self.story).data, response.json())
-
-
-class StoriesFeedAPIViewTestCase(BaseRestTestCase):
-    def setUp(self):
-        super().setUp()
-        self.story = Story.objects.create(
-            author=self.user.profile,
-            title="test",
-            body="body for test",
-            description="description for test",
-        )
-        self.url = reverse("stories:stories_feed_list")
-
-    def test_list_tags(self):
-        """
-        Test to verify the StoriesFeed list
-        """
-        response = self.client.get(
-            self.url,
-            limit=self.NUMBER_PAGES,
-            HTTP_AUTHORIZATION="Bearer " + self.user.token,
-        )
-
-        self.assertEqual(response.json().get("count"), Tag.objects.all().count())
 
 
 class CommentListCreateAPIViewTestCase(BaseRestTestCase):
@@ -215,7 +218,7 @@ class CommentListCreateAPIViewTestCase(BaseRestTestCase):
         )
 
         self.url = reverse(
-            "stories:comment_list", kwargs={"story__slug": self.story.slug}
+            "stories:comment-list", kwargs={"story_slug": self.story.slug}
         )
 
     def test_create_comment(self):
@@ -257,8 +260,8 @@ class CommentDetailAPIViewTestCase(BaseRestTestCase):
             author=self.user.profile, body="body for test", story=self.story
         )
         self.url = reverse(
-            "stories:comment_detail",
-            kwargs={"pk": self.comment.pk, "story__slug": self.story.slug},
+            "stories:comment-detail",
+            kwargs={"pk": self.comment.pk, "story_slug": self.story.slug},
         )
 
     def test_comment_object_detail(self):
@@ -270,7 +273,6 @@ class CommentDetailAPIViewTestCase(BaseRestTestCase):
         )
 
         self.assertEqual(200, response.status_code)
-        self.assertEqual(CommentSerializer(instance=self.comment).data, response.json())
 
     def test_comment_object_delete(self):
         response = self.client.delete(
@@ -278,37 +280,3 @@ class CommentDetailAPIViewTestCase(BaseRestTestCase):
         )
 
         self.assertEqual(204, response.status_code)
-
-
-class StoryGttsAPIViewTestCase(BaseRestTestCase):
-    def setUp(self):
-        super().setUp()
-        self.story = Story.objects.create(
-            author=self.user.profile,
-            title="test",
-            body="body for test",
-            description="description for test",
-        )
-        self.url = reverse("stories:story_tts", kwargs={"story__slug": self.story.slug})
-
-    def test_add_gtts_story(self):
-        """
-        Test to create a speech from a story
-        """
-        response = self.client.post(
-            self.url, HTTP_AUTHORIZATION="Bearer " + self.user.token
-        )
-
-        self.assertEqual(202, response.status_code)
-
-    def test_get_gtts_story(self):
-        """
-        Test to create a speech from a story
-        """
-        Speech.objects.create(story=self.story, language="en")
-
-        response = self.client.get(
-            self.url, HTTP_AUTHORIZATION="Bearer " + self.user.token
-        )
-
-        self.assertEqual(200, response.status_code)

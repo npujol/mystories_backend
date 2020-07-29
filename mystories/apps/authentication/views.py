@@ -48,10 +48,6 @@ class UserRetrieveUpdateAPIView(
 
     retrieve: Retrieve a user
 
-    update: Update a user
-
-    partial_update: Partial update for a user
-
     """
 
     permission_classes = (IsAuthenticated,)
