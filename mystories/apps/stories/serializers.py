@@ -106,22 +106,15 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class SpeechSerializer(serializers.ModelSerializer):
-    story = StorySerializer(required=False)
+    story = StorySerializer(read_only=True, required=False)
+    language = serializers.CharField(required=False)
 
     createdAt = serializers.SerializerMethodField(method_name="get_created_at")
     updatedAt = serializers.SerializerMethodField(method_name="get_updated_at")
 
     class Meta:
         model = Speech
-        fields = (
-            "id",
-            "story",
-            "language",
-            "speech_file",
-            "is_ready",
-            "createdAt",
-            "updatedAt",
-        )
+        fields = ("pk", "story", "language", "speech_file", "createdAt", "updatedAt")
 
     def get_created_at(self, instance):
         return instance.created_at.isoformat()

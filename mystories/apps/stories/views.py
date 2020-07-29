@@ -123,6 +123,33 @@ class StoryViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @action(detail=True, methods=["post"], url_path="make_audio", url_name="make_audio")
+    def create_task(self, request, slug=None):
+        story = self.get_object()
+
+        try:
+            speech = Speech.objects.get(story=story)
+
+            return Response(
+                {"message": "This story has a speech already"},
+                status=status.HTTP_202_ACCEPTED,
+            )
+        except Speech.DoesNotExist:
+
+            create_speech.delay(slug)
+
+            return Response(
+                {"message": "We are making the speech! We will notify you."},
+                status=status.HTTP_202_ACCEPTED,
+            )
+
+    @action(detail=True, methods=["get"], url_path="audio", url_name="audio")
+    def get(self, request, slug=None):
+        story = self.get_object()
+        speech = get_object_or_404(Speech, story=story)
+
+        return Response(SpeechSerializer(speech).data, status=status.HTTP_200_OK)
+
 
 class TagListAPIView(
     mixins.CreateModelMixin,
@@ -160,7 +187,7 @@ class StoriesFeedAPIView(generics.ListAPIView):
     queryset = Story.objects.all()
 
 
-class CommentsListCreateAPIView(
+class CommentsAPIView(
     mixins.CreateModelMixin,
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
@@ -174,6 +201,10 @@ class CommentsListCreateAPIView(
 
     create: Create a comment
 
+    retrieve: Retrieve a comment
+
+    destroy: Delete a comment
+
     """
 
     serializer_class = CommentSerializer
@@ -182,14 +213,13 @@ class CommentsListCreateAPIView(
     queryset = Comment.objects.select_related(
         "story", "story__author", "story__author__user", "author", "author__user"
     )
-    lookup_field = "story__slug"
 
-    def create(self, request, story__slug=None):
+    def create(self, request, story_slug=None):
         data = request.data
         context = {}
 
         author = get_object_or_404(Profile, user=request.user)
-        story = get_object_or_404(Story, slug=story__slug)
+        story = get_object_or_404(Story, slug=story_slug)
 
         context["author"] = author
         context["story"] = story
@@ -206,60 +236,3 @@ class CommentsListCreateAPIView(
         )
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
-class CommentsRetrieveDestroyAPIView(
-    mixins.RetrieveModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet
-):
-    """
-    General ViewSet description
-
-    retrieve: Retrieve a comment
-
-    destroy: Delete a comment
-
-    """
-
-    serializer_class = CommentSerializer
-    permission_classes = (IsAuthenticatedOrReadOnly,)
-
-    queryset = Comment.objects.select_related(
-        "story", "story__author", "story__author__user", "author", "author__user"
-    )
-
-
-class StoryGttsAPIView(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
-    permission_classes = (IsAuthenticated,)
-    serializer_class = SpeechSerializer
-    lookup_field = "story__slug"
-
-    queryset = Speech.objects.all()
-
-    @swagger_auto_schema(operation_description="Create speech to a story")
-    def create_task(self, request, story__slug=None):
-        story = get_object_or_404(Story, slug=story__slug)
-
-        try:
-            speech = Speech.objects.get(story=story)
-
-            return Response(
-                {"message": "This story has a speech already"},
-                status=status.HTTP_202_ACCEPTED,
-            )
-        except Speech.DoesNotExist:
-
-            create_speech.delay(story__slug)
-
-            return Response(
-                {"message": "We are making the speech! We will notify you."},
-                status=status.HTTP_202_ACCEPTED,
-            )
-
-    @swagger_auto_schema(
-        operation_description="Create speech to a story",
-        responses={404: "slug not found", 201: SpeechSerializer},
-        request_body=SpeechSerializer,
-    )
-    def get(self, request, story__slug=None):
-        story = get_object_or_404(Story, slug=story__slug)
-        speech = get_object_or_404(Speech, story=story)
