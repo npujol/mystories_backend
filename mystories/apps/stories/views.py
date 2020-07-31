@@ -2,6 +2,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.utils.translation import gettext as _
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics, mixins, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import (
@@ -45,7 +46,6 @@ class StoryViewSet(viewsets.ModelViewSet):
     """
 
     permission_classes = (IsAuthenticatedOrReadOnly,)
-    parser_classes = [MultiPartParser, FormParser]
     serializer_class = StorySerializer
 
     lookup_field = "slug"
@@ -77,6 +77,75 @@ class StoryViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+    @action(
+        detail=True,
+        methods=["put"],
+        permission_classes=[IsAuthenticated],
+        parser_classes=[MultiPartParser, FormParser],
+    )
+    def change_image(self, request, slug=None):
+        obj = self.get_object()
+        obj.image = request.data["image"]
+        obj.save()
+        serializer = self.serializer_class(obj)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
+    def favorite(self, request, slug=None):
+        profile = self.request.user.profile
+        serializer_context = {"request": request}
+        story = self.get_object()
+        profile.favorite(story)
+
+        Notification.objects.create(
+            title=_("Your story was marked as a favorite."),
+            body=_("{} marks your story: {} as favorite".format(profile, story)),
+            author=profile,
+            receiver=story.author,
+        )
+
+        serializer = self.serializer_class(story, context=serializer_context)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=["delete"], permission_classes=[IsAuthenticated])
+    def unfavorite(self, request, slug=None):
+        profile = self.request.user.profile
+        serializer_context = {"request": request}
+        story = self.get_object()
+
+        profile.unfavorite(story)
+        serializer = self.serializer_class(story, context=serializer_context)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
+    def make_audio(self, request, slug=None):
+        story = self.get_object()
+
+        try:
+            speech = Speech.objects.get(story=story)
+
+            return Response(
+                {"message": "This story has a speech already"},
+                status=status.HTTP_202_ACCEPTED,
+            )
+        except Speech.DoesNotExist:
+
+            create_speech.delay(slug)
+
+            return Response(
+                {"message": "We are making the speech! We will notify you."},
+                status=status.HTTP_202_ACCEPTED,
+            )
+
+    @action(detail=True, methods=["get"], permission_classes=[IsAuthenticated])
+    def get_audio(self, request, slug=None):
+        story = self.get_object()
+        speech = get_object_or_404(Speech, story=story)
+
+        return Response(SpeechSerializer(speech).data, status=status.HTTP_200_OK)
+
 
 class TagListAPIView(
     mixins.CreateModelMixin,
@@ -102,52 +171,6 @@ class TagListAPIView(
     queryset = Tag.objects.all()
 
 
-class StoriesFavoriteAPIView(APIView):
-    permission_classes = (IsAuthenticated,)
-    serializer_class = StorySerializer
-
-    @swagger_auto_schema(
-        operation_description="Add a favorite to a story",
-        responses={404: "slug not found", 201: StorySerializer},
-        request_body=StorySerializer,
-    )
-    def post(self, request, story__slug=None):
-        profile = self.request.user.profile
-        serializer_context = {"request": request}
-
-        story = get_object_or_404(Story, slug=story__slug)
-
-        profile.favorite(story)
-
-        Notification.objects.create(
-            title=_("Your story was marked as a favorite."),
-            body=_("{} marks your story: {} as favorite".format(profile, story)),
-            author=profile,
-            receiver=story.author,
-        )
-
-        serializer = self.serializer_class(story, context=serializer_context)
-
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    @swagger_auto_schema(
-        operation_description="Remove a favorite to a story",
-        responses={404: "slug not found", 201: StorySerializer},
-        request_body=StorySerializer,
-    )
-    def delete(self, request, story__slug=None):
-        profile = self.request.user.profile
-        serializer_context = {"request": request}
-
-        story = get_object_or_404(Story, slug=story__slug)
-
-        profile.unfavorite(story)
-
-        serializer = self.serializer_class(story, context=serializer_context)
-
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-
 class StoriesFeedAPIView(generics.ListAPIView):
     """
     General ViewSet description
@@ -160,8 +183,12 @@ class StoriesFeedAPIView(generics.ListAPIView):
     queryset = Story.objects.all()
 
 
-class CommentsListCreateAPIView(
-    mixins.CreateModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet
+class CommentsAPIView(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
 ):
     """
     General ViewSet description
@@ -169,6 +196,10 @@ class CommentsListCreateAPIView(
     list: List the comments
 
     create: Create a comment
+
+    retrieve: Retrieve a comment
+
+    destroy: Delete a comment
 
     """
 
@@ -178,14 +209,13 @@ class CommentsListCreateAPIView(
     queryset = Comment.objects.select_related(
         "story", "story__author", "story__author__user", "author", "author__user"
     )
-    lookup_field = "story__slug"
 
-    def create(self, request, story__slug=None):
+    def create(self, request, story_slug=None):
         data = request.data
         context = {}
 
         author = get_object_or_404(Profile, user=request.user)
-        story = get_object_or_404(Story, slug=story__slug)
+        story = get_object_or_404(Story, slug=story_slug)
 
         context["author"] = author
         context["story"] = story
@@ -202,60 +232,3 @@ class CommentsListCreateAPIView(
         )
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
-class CommentsRetrieveDestroyAPIView(
-    mixins.RetrieveModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet
-):
-    """
-    General ViewSet description
-
-    retrieve: Retrieve a comment
-
-    destroy: Delete a comment
-
-    """
-
-    serializer_class = CommentSerializer
-    permission_classes = (IsAuthenticatedOrReadOnly,)
-
-    queryset = Comment.objects.select_related(
-        "story", "story__author", "story__author__user", "author", "author__user"
-    )
-
-
-class StoryGttsAPIView(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
-    permission_classes = (IsAuthenticated,)
-    serializer_class = SpeechSerializer
-    lookup_field = "story__slug"
-
-    queryset = Speech.objects.all()
-
-    @swagger_auto_schema(operation_description="Create speech to a story")
-    def create_task(self, request, story__slug=None):
-        story = get_object_or_404(Story, slug=story__slug)
-
-        try:
-            speech = Speech.objects.get(story=story)
-
-            return Response(
-                {"message": "This story has a speech already"},
-                status=status.HTTP_202_ACCEPTED,
-            )
-        except Speech.DoesNotExist:
-
-            create_speech.delay(story__slug)
-
-            return Response(
-                {"message": "We are making the speech! We will notify you."},
-                status=status.HTTP_202_ACCEPTED,
-            )
-
-    @swagger_auto_schema(
-        operation_description="Create speech to a story",
-        responses={404: "slug not found", 201: SpeechSerializer},
-        request_body=SpeechSerializer,
-    )
-    def get(self, request, story__slug=None):
-        story = get_object_or_404(Story, slug=story__slug)
-        speech = get_object_or_404(Speech, story=story)

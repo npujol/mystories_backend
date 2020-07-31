@@ -1,12 +1,13 @@
 from rest_framework import serializers
 
+from ..profiles.models import Profile
 from ..profiles.serializers import ProfileSerializer
 from .models import Notification
 
 
 class NotificationSerializer(serializers.ModelSerializer):
     author = ProfileSerializer(read_only=True)
-    receiver = ProfileSerializer(read_only=True)
+    receiver = serializers.PrimaryKeyRelatedField(queryset=Profile.objects.all())
 
     createdAt = serializers.SerializerMethodField(method_name="get_created_at")
     updatedAt = serializers.SerializerMethodField(method_name="get_updated_at")

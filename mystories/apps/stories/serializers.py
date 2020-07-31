@@ -15,6 +15,7 @@ class StorySerializer(serializers.ModelSerializer):
     author = ProfileSerializer(read_only=True)
     slug = serializers.SlugField(read_only=True)
     tags = TagSerializer(many=True, read_only=True)
+    image = serializers.FileField(read_only=True)
 
     favorited = serializers.SerializerMethodField()
     favoritesCount = serializers.SerializerMethodField(
@@ -54,7 +55,6 @@ class StorySerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         tags = validated_data.pop("tags", [])
-        print(validated_data, instance, tags)
         for tag in tags:
             if not (tag in instance.tags):
                 obj = Tag.objects.get_or_create(tag=tag)
@@ -105,22 +105,15 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class SpeechSerializer(serializers.ModelSerializer):
-    story = StorySerializer(required=False)
+    story = StorySerializer(read_only=True, required=False)
+    language = serializers.CharField(required=False)
 
     createdAt = serializers.SerializerMethodField(method_name="get_created_at")
     updatedAt = serializers.SerializerMethodField(method_name="get_updated_at")
 
     class Meta:
         model = Speech
-        fields = (
-            "id",
-            "story",
-            "language",
-            "speech_file",
-            "is_ready",
-            "createdAt",
-            "updatedAt",
-        )
+        fields = ("pk", "story", "language", "speech_file", "createdAt", "updatedAt")
 
     def get_created_at(self, instance):
         return instance.created_at.isoformat()

@@ -59,9 +59,9 @@ class Tag(TimestampedModel):
 
 class Speech(TimestampedModel):
     story = models.OneToOneField("stories.Story", on_delete=models.CASCADE)
-    language = models.CharField(max_length=255)
+    language = models.CharField(max_length=10, null=True, default="en")
     speech_file = models.FileField(upload_to="gTTS/%Y/%m/%d/", null=True, blank=True)
-    is_ready = models.BooleanField(default=False)
+    is_ready = models.BooleanField(default=False, null=True)
 
 
 def __str__(self):

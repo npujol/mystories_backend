@@ -1,6 +1,5 @@
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import status
-from rest_framework.generics import RetrieveUpdateAPIView
+from rest_framework import serializers, status, viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -10,8 +9,7 @@ from .models import User
 from .serializers import LoginSerializer, RegistrationSerializer, UserSerializer
 
 
-class RegistrationAPIView(APIView):
-    # Allow any user (authenticated or not) to hit this endpoint.
+class RegistrationAPIView(viewsets.GenericViewSet, viewsets.mixins.CreateModelMixin):
     permission_classes = (AllowAny,)
     serializer_class = RegistrationSerializer
 
@@ -19,7 +17,7 @@ class RegistrationAPIView(APIView):
         responses={404: "slug not found", 201: RegistrationSerializer},
         request_body=RegistrationSerializer,
     )
-    def post(self, request):
+    def create(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -27,7 +25,7 @@ class RegistrationAPIView(APIView):
         return Response(serializer.data, status.HTTP_201_CREATED)
 
 
-class LoginAPIView(APIView):
+class LoginAPIView(viewsets.GenericViewSet, viewsets.mixins.CreateModelMixin):
     permission_classes = (AllowAny,)
     serializer_class = LoginSerializer
 
@@ -35,22 +33,20 @@ class LoginAPIView(APIView):
         responses={404: "slug not found", 201: LoginSerializer},
         request_body=LoginSerializer,
     )
-    def post(self, request):
+    def create(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class UserRetrieveUpdateAPIView(RetrieveUpdateAPIView):
+class UserRetrieveUpdateAPIView(
+    viewsets.GenericViewSet, viewsets.mixins.RetrieveModelMixin
+):
     """
     UserRetrieveUpdateAPIView description. It need the username.
 
     retrieve: Retrieve a user
-
-    update: Update a user
-
-    partial_update: Partial update for a user
 
     """
 

@@ -6,7 +6,7 @@ from .models import Profile
 
 class ProfileSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source="user.username", read_only=True)
-    # image = serializers.SerializerMethodField()
+    image = serializers.FileField(read_only=True)
     following = serializers.SerializerMethodField()
 
     class Meta:
