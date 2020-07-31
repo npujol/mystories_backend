@@ -2,7 +2,11 @@ from django.utils.translation import gettext as _
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.parsers import FormParser, MultiPartParser
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import (
+    AllowAny,
+    IsAuthenticated,
+    IsAuthenticatedOrReadOnly,
+)
 from rest_framework.response import Response
 
 from ..notifications.models import Notification
@@ -26,7 +30,7 @@ class ProfileRetrieveUpdateAPIView(
 
     """
 
-    permission_classes = (AllowAny, IsAuthenticated)
+    permission_classes = (AllowAny, IsAuthenticatedOrReadOnly)
     serializer_class = ProfileSerializer
 
     lookup_field = "user__username"
@@ -35,8 +39,6 @@ class ProfileRetrieveUpdateAPIView(
     @action(
         detail=True,
         methods=["put"],
-        url_path="change_image",
-        url_name="change_image",
         permission_classes=[IsAuthenticated],
         parser_classes=[MultiPartParser, FormParser],
     )
@@ -47,12 +49,7 @@ class ProfileRetrieveUpdateAPIView(
         serializer = self.serializer_class(obj)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(
-        detail=True,
-        methods=["post"],
-        url_path="follow_profile",
-        url_name="follow_profile",
-    )
+    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
     def follow_profile(self, request, user__username):
         follower = self.request.user.profile
         followee = self.get_object()
@@ -72,12 +69,7 @@ class ProfileRetrieveUpdateAPIView(
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @action(
-        detail=True,
-        methods=["delete"],
-        url_path="unfollow_profile",
-        url_name="unfollow_profile",
-    )
+    @action(detail=True, methods=["delete"], permission_classes=[IsAuthenticated])
     def unfollow_profile(self, request, user__username):
         follower = self.request.user.profile
         followee = self.get_object()
