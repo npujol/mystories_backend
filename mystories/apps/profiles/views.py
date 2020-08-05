@@ -69,7 +69,7 @@ class ProfileRetrieveUpdateAPIView(
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @action(detail=True, methods=["delete"], permission_classes=[IsAuthenticated])
+    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
     def unfollow_profile(self, request, user__username):
         follower = self.request.user.profile
         followee = self.get_object()

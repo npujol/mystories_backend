@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.translation import gettext as _
+from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics, mixins, status, viewsets
 from rest_framework.decorators import action
@@ -50,6 +51,9 @@ class StoryViewSet(viewsets.ModelViewSet):
 
     lookup_field = "slug"
     queryset = Story.objects.select_related("author", "author__user")
+
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ["author__user__username", "tags__tag", "author__favorites"]
 
     def get_queryset(self):
         queryset = self.queryset
@@ -108,7 +112,7 @@ class StoryViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @action(detail=True, methods=["delete"], permission_classes=[IsAuthenticated])
+    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
     def unfavorite(self, request, slug=None):
         profile = self.request.user.profile
         serializer_context = {"request": request}
