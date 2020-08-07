@@ -81,6 +81,26 @@ class StorySerializer(serializers.ModelSerializer):
         return instance.updated_at.isoformat()
 
 
+class StoryImageSerializer(StorySerializer):
+    image = serializers.ImageField()
+
+    class Meta(StorySerializer.Meta):
+        read_only_fields = (
+            "author",
+            "body",
+            "body_markdown",
+            "language",
+            "description",
+            "favorited",
+            "favoritesCount",
+            "slug",
+            "tags",
+            "title",
+            "createdAt",
+            "updatedAt",
+        )
+
+
 class CommentSerializer(serializers.ModelSerializer):
     author = ProfileSerializer(required=False)
     story = StorySerializer(required=False)

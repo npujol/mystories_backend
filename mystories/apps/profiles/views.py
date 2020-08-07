@@ -11,7 +11,7 @@ from rest_framework.response import Response
 
 from ..notifications.models import Notification
 from .models import Profile
-from .serializers import ProfileSerializer
+from .serializers import ProfileImageSerializer, ProfileSerializer
 
 
 class ProfileRetrieveUpdateAPIView(
@@ -40,13 +40,16 @@ class ProfileRetrieveUpdateAPIView(
         detail=True,
         methods=["put"],
         permission_classes=[IsAuthenticated],
-        parser_classes=[MultiPartParser, FormParser],
+        parser_classes=[MultiPartParser],
+        serializer_class=ProfileImageSerializer,
     )
     def change_image(self, request, user__username):
-        obj = self.get_object()
-        obj.image = request.data["image"]
-        obj.save()
-        serializer = self.serializer_class(obj)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])

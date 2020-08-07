@@ -27,3 +27,10 @@ class ProfileSerializer(serializers.ModelSerializer):
         follower = request.user.profile
 
         return follower.is_following(profile)
+
+
+class ProfileImageSerializer(ProfileSerializer):
+    image = serializers.ImageField()
+
+    class Meta(ProfileSerializer.Meta):
+        read_only_fields = ("username", "bio", "following")

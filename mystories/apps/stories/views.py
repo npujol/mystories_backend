@@ -21,6 +21,7 @@ from .models import Comment, Speech, Story, Tag
 from .serializers import (
     CommentSerializer,
     SpeechSerializer,
+    StoryImageSerializer,
     StorySerializer,
     TagSerializer,
 )
@@ -85,13 +86,16 @@ class StoryViewSet(viewsets.ModelViewSet):
         detail=True,
         methods=["put"],
         permission_classes=[IsAuthenticated],
-        parser_classes=[MultiPartParser, FormParser],
+        parser_classes=[MultiPartParser],
+        serializer_class=StoryImageSerializer,
     )
     def change_image(self, request, slug=None):
-        obj = self.get_object()
-        obj.image = request.data["image"]
-        obj.save()
-        serializer = self.serializer_class(obj)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
