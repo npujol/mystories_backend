@@ -209,10 +209,15 @@ class CommentsAPIView(
 
     serializer_class = CommentSerializer
     permission_classes = (IsAuthenticatedOrReadOnly,)
+    queryset = Comment.objects.select_related("story")
 
-    queryset = Comment.objects.select_related(
-        "story", "story__author", "story__author__user", "author", "author__user"
-    )
+    def get_queryset(self):
+        queryset = self.queryset
+        slug = self.kwargs["story_slug"]
+        if slug:
+            return queryset.filter(story__slug=slug)
+
+        return queryset
 
     def create(self, request, story_slug=None):
         data = request.data
