@@ -66,10 +66,9 @@ class StorySerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         tags = validated_data.pop("tags", [])
+        instance.tags.clear()
         for tag in tags:
-            if not (tag in instance.tags):
-                obj = Tag.objects.get_or_create(tag=tag)
-                instance.tags.add(obj)
+            instance.tags.add(tag)
 
         instance = super(StorySerializer, self).update(instance, validated_data)
         return instance
