@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from ..core.serializer_fields import AddObjectSlugRelatedField
 from ..profiles.serializers import ProfileSerializer
 from .models import Comment, Speech, Story, Tag
 from .relations import TagRelatedField
@@ -11,16 +12,27 @@ class TagSerializer(serializers.ModelSerializer):
         fields = ("tag", "pk")
 
 
+class StoryPrivateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Story
+        fields = ("body_markdown",)
+
+
 class StorySerializer(serializers.ModelSerializer):
     author = ProfileSerializer(read_only=True)
     slug = serializers.SlugField(read_only=True)
-    tags = TagSerializer(many=True, read_only=True)
+    tags = AddObjectSlugRelatedField(
+        slug_field="tag", queryset=Tag.objects.all(), many=True
+    )
     image = serializers.FileField(read_only=True)
 
     favorited = serializers.SerializerMethodField()
     favoritesCount = serializers.SerializerMethodField(
         method_name="get_favorites_count"
     )
+    body = serializers.CharField(read_only=True)
+    body_markdown = serializers.CharField(write_only=True)
+
     createdAt = serializers.SerializerMethodField(method_name="get_created_at")
     updatedAt = serializers.SerializerMethodField(method_name="get_updated_at")
 
@@ -48,8 +60,7 @@ class StorySerializer(serializers.ModelSerializer):
         story = Story.objects.create(author=author, **validated_data)
 
         for tag in tags:
-            obj = Tag.objects.get_or_create(tag=tag)
-            story.tags.add(obj)
+            story.tags.add(tag)
 
         return story
 
@@ -88,7 +99,6 @@ class StoryImageSerializer(StorySerializer):
         read_only_fields = (
             "author",
             "body",
-            "body_markdown",
             "language",
             "description",
             "favorited",

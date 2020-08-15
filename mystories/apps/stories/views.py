@@ -22,6 +22,7 @@ from .serializers import (
     CommentSerializer,
     SpeechSerializer,
     StoryImageSerializer,
+    StoryPrivateSerializer,
     StorySerializer,
     TagSerializer,
 )
@@ -81,6 +82,18 @@ class StoryViewSet(viewsets.ModelViewSet):
         serializer.save()
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(
+        detail=True,
+        methods=["get"],
+        permission_classes=[IsAuthenticated],
+        serializer_class=StoryPrivateSerializer,
+    )
+    def get_body_markdown(self, request, slug=None):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(
         detail=True,
