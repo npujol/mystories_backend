@@ -5,7 +5,7 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics, mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound
-from rest_framework.parsers import FormParser, MultiPartParser
+from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import (
     AllowAny,
     IsAuthenticated,
@@ -15,6 +15,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from ..core.permissions import IsOwner, IsOwnerOrReadOnly
 from ..notifications.models import Notification
 from ..profiles.models import Profile
 from .models import Comment, Speech, Story, Tag
@@ -48,7 +49,7 @@ class StoryViewSet(viewsets.ModelViewSet):
 
     """
 
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+    permission_classes = (IsOwnerOrReadOnly,)
     serializer_class = StorySerializer
 
     lookup_field = "slug"
@@ -86,7 +87,7 @@ class StoryViewSet(viewsets.ModelViewSet):
     @action(
         detail=True,
         methods=["get"],
-        permission_classes=[IsAuthenticated],
+        permission_classes=[IsOwner],
         serializer_class=StoryPrivateSerializer,
     )
     def get_body_markdown(self, request, slug=None):
@@ -98,7 +99,7 @@ class StoryViewSet(viewsets.ModelViewSet):
     @action(
         detail=True,
         methods=["put"],
-        permission_classes=[IsAuthenticated],
+        permission_classes=[IsOwner],
         parser_classes=[MultiPartParser],
         serializer_class=StoryImageSerializer,
     )
@@ -140,7 +141,7 @@ class StoryViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
+    @action(detail=True, methods=["post"])
     def make_audio(self, request, slug=None):
         story = self.get_object()
 
@@ -160,7 +161,7 @@ class StoryViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_202_ACCEPTED,
             )
 
-    @action(detail=True, methods=["get"], permission_classes=[IsAuthenticated])
+    @action(detail=True, methods=["get"])
     def get_audio(self, request, slug=None):
         story = self.get_object()
         speech = get_object_or_404(Speech, story=story)
