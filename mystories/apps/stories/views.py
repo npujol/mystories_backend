@@ -55,24 +55,23 @@ class StoryViewSet(viewsets.ModelViewSet):
     lookup_field = "slug"
     queryset = Story.objects.select_related("author", "author__user")
 
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ["author__user__username", "tags__tag", "author__favorites"]
-
-    def get_queryset(self):
-        queryset = self.queryset
+    def list(self, request, *args, **kwargs):
         author = self.request.query_params.get("author", None)
         favorited_by = self.request.query_params.get("favorited", None)
         tag = self.request.query_params.get("tag", None)
 
         if author is not None:
-            return queryset.filter(author__user__username=author)
+            self.queryset = self.queryset.filter(author__user__username=author)
 
         if tag is not None:
-            return queryset.filter(tags__tag=tag)
+            self.queryset = self.queryset.filter(tags__tag=tag)
 
         if favorited_by is not None:
-            return queryset.filter(favorited_by__user__username=favorited_by)
-        return queryset
+            self.queryset = self.queryset.filter(
+                favorited_by__user__username=favorited_by
+            )
+
+        return super().list(self, request, *args, **kwargs)
 
     def create(self, request):
         serializer = self.serializer_class(
