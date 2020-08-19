@@ -1,17 +1,9 @@
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
-from django_filters.rest_framework import DjangoFilterBackend
-from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics, mixins, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import NotFound
 from rest_framework.parsers import MultiPartParser
-from rest_framework.permissions import (
-    AllowAny,
-    IsAuthenticated,
-    IsAuthenticatedOrReadOnly,
-)
-from rest_framework.renderers import JSONRenderer
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -28,7 +20,7 @@ from .serializers import (
     TagSerializer,
 )
 from .tasks import create_speech
-from .utils import TTSStory
+from .tts import TTSStory
 
 
 class StoryViewSet(viewsets.ModelViewSet):
@@ -104,8 +96,8 @@ class StoryViewSet(viewsets.ModelViewSet):
     )
     def change_image(self, request, slug=None):
         instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=True)
 
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
 
@@ -116,6 +108,7 @@ class StoryViewSet(viewsets.ModelViewSet):
         profile = self.request.user.profile
         serializer_context = {"request": request}
         story = self.get_object()
+
         profile.favorite(story)
 
         Notification.objects.create(
@@ -136,6 +129,7 @@ class StoryViewSet(viewsets.ModelViewSet):
         story = self.get_object()
 
         profile.unfavorite(story)
+
         serializer = self.serializer_class(story, context=serializer_context)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -152,7 +146,6 @@ class StoryViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_202_ACCEPTED,
             )
         except Speech.DoesNotExist:
-
             create_speech.delay(slug)
 
             return Response(
@@ -177,7 +170,7 @@ class TagListAPIView(
     """
     General ViewSet description
 
-    list: List the tags
+    list: List of tags
 
     retrieve: Retrieve a tag
 
@@ -214,7 +207,7 @@ class CommentsAPIView(
     """
     General ViewSet description
 
-    list: List the comments
+    list: List of comments
 
     create: Create a comment
 
@@ -225,7 +218,7 @@ class CommentsAPIView(
     """
 
     serializer_class = CommentSerializer
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+    permission_classes = (IsOwnerOrReadOnly,)
     queryset = Comment.objects.select_related("story")
 
     def get_queryset(self):

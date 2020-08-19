@@ -1,7 +1,7 @@
 from celery import shared_task
 
 from .models import Speech, Story
-from .utils import TTSStory
+from .tts import TTSStory
 
 
 @shared_task(name="Create a speech from a story")

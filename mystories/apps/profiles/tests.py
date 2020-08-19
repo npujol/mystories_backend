@@ -50,12 +50,12 @@ class ProfileAPIViewTestCase(BaseRestTestCase):
         Test to verify follow profile
         """
         url = reverse(
-            "profiles:profile-follow_profile",
+            "profiles:profile-follow",
             kwargs={"user__username": self.user_test.username},
         )
+
         response = self.client.post(url, HTTP_AUTHORIZATION="Bearer " + self.user.token)
-        print(response.json())
-        self.assertEqual(201, response.status_code)
+
         self.assertTrue(response.json()["following"])
 
     def test_unfollow_profile(self):
@@ -63,12 +63,10 @@ class ProfileAPIViewTestCase(BaseRestTestCase):
         Test to verify unfollow profile
         """
         url = reverse(
-            "profiles:profile-unfollow_profile",
+            "profiles:profile-unfollow",
             kwargs={"user__username": self.user_test.username},
         )
-        response = self.client.delete(
-            url, HTTP_AUTHORIZATION="Bearer " + self.user.token
-        )
 
-        self.assertEqual(200, response.status_code)
+        response = self.client.post(url, HTTP_AUTHORIZATION="Bearer " + self.user.token)
+
         self.assertFalse(response.json()["following"])
