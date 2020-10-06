@@ -48,9 +48,11 @@ class StoryViewSet(viewsets.ModelViewSet):
     queryset = Story.objects.select_related("author", "author__user")
 
     def list(self, request, *args, **kwargs):
-        author = self.request.query_params.get("author", None)
-        favorited_by = self.request.query_params.get("favorited", None)
-        tag = self.request.query_params.get("tag", None)
+        author = self.request.query_params.get("author__user__username", None)
+        favorited_by = self.request.query_params.get(
+            "favorited_by__user__username", None
+        )
+        tag = self.request.query_params.get("tags__tag", None)
 
         if author is not None:
             self.queryset = self.queryset.filter(author__user__username=author)
