@@ -20,13 +20,12 @@ class StoryListCreateAPIViewTestCase(BaseRestTestCase):
             self.url,
             {
                 "title": "string",
-                "body": "string for the body",
+                "body_markdown": "string for the body",
                 "description": "string",
-                "tagList": ["string"],
+                "tags": ["string"],
             },
             HTTP_AUTHORIZATION="Bearer " + self.user.token,
         )
-
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Story.objects.all().count(), (stories_count + 1))
         self.assertEqual(Story.objects.last().title, "string")
@@ -50,7 +49,7 @@ class StoryDetailAPIViewTestCase(BaseRestTestCase):
         self.story = Story.objects.create(
             author=self.user.profile,
             title="test",
-            body="body for test",
+            body_markdown="body for test",
             description="description for test",
         )
         self.url = reverse("stories:story-detail", kwargs={"slug": self.story.slug})
@@ -70,7 +69,7 @@ class StoryDetailAPIViewTestCase(BaseRestTestCase):
             self.url,
             {
                 "title": "string",
-                "body": "Another string for the body",
+                "body_markdown": "Another string for the body",
                 "description": "string",
                 "tags": ["string"],
             },
@@ -83,7 +82,7 @@ class StoryDetailAPIViewTestCase(BaseRestTestCase):
     def test_story_object_partial_update(self):
         response = self.client.patch(
             self.url,
-            {"body": "another body"},
+            {"body_markdown": "another body"},
             HTTP_AUTHORIZATION="Bearer " + self.user.token,
         )
 
@@ -111,9 +110,7 @@ class StoryDetailAPIViewTestCase(BaseRestTestCase):
         Test to unfavorite story
         """
         url = reverse("stories:story-unfavorite", kwargs={"slug": self.story.slug})
-        response = self.client.delete(
-            url, HTTP_AUTHORIZATION="Bearer " + self.user.token
-        )
+        response = self.client.post(url, HTTP_AUTHORIZATION="Bearer " + self.user.token)
 
         self.assertEqual(200, response.status_code)
 
@@ -144,12 +141,12 @@ class StoriesFeedAPIViewTestCase(BaseRestTestCase):
         self.story = Story.objects.create(
             author=self.user.profile,
             title="test",
-            body="body for test",
+            body_markdown="body for test",
             description="description for test",
         )
         self.url = reverse("stories:stories_feed_list")
 
-    def test_list_tags(self):
+    def test_list_StoriesFeed(self):
         """
         Test to verify the StoriesFeed list
         """
@@ -159,10 +156,10 @@ class StoriesFeedAPIViewTestCase(BaseRestTestCase):
             HTTP_AUTHORIZATION="Bearer " + self.user.token,
         )
 
-        self.assertEqual(response.json().get("count"), Tag.objects.all().count())
+        self.assertEqual(response.json().get("count"), Story.objects.all().count())
 
 
-class TagListCreateAPIViewTestCase(BaseRestTestCase):
+class TagCreateAPIViewTestCase(BaseRestTestCase):
     def setUp(self):
         super().setUp()
         self.url = reverse("stories:tag-list")
@@ -213,7 +210,7 @@ class CommentListCreateAPIViewTestCase(BaseRestTestCase):
         self.story = Story.objects.create(
             author=self.user.profile,
             title="test",
-            body="body for test",
+            body_markdown="body for test",
             description="description for test",
         )
 
@@ -253,7 +250,7 @@ class CommentDetailAPIViewTestCase(BaseRestTestCase):
         self.story = Story.objects.create(
             author=self.user.profile,
             title="test",
-            body="body for test",
+            body_markdown="body for test",
             description="description for test",
         )
         self.comment = Comment.objects.create(

@@ -2,12 +2,16 @@ from django.utils.translation import gettext as _
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.parsers import FormParser, MultiPartParser
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import (
+    AllowAny,
+    IsAuthenticated,
+    IsAuthenticatedOrReadOnly,
+)
 from rest_framework.response import Response
 
 from ..notifications.models import Notification
 from .models import Profile
-from .serializers import ProfileSerializer
+from .serializers import ProfileImageSerializer, ProfileSerializer
 
 
 class ProfileRetrieveUpdateAPIView(
@@ -26,7 +30,7 @@ class ProfileRetrieveUpdateAPIView(
 
     """
 
-    permission_classes = (AllowAny, IsAuthenticated)
+    permission_classes = (AllowAny, IsAuthenticatedOrReadOnly)
     serializer_class = ProfileSerializer
 
     lookup_field = "user__username"
@@ -35,25 +39,21 @@ class ProfileRetrieveUpdateAPIView(
     @action(
         detail=True,
         methods=["put"],
-        url_path="change_image",
-        url_name="change_image",
         permission_classes=[IsAuthenticated],
-        parser_classes=[MultiPartParser, FormParser],
+        parser_classes=[MultiPartParser],
+        serializer_class=ProfileImageSerializer,
     )
     def change_image(self, request, user__username):
-        obj = self.get_object()
-        obj.image = request.data["image"]
-        obj.save()
-        serializer = self.serializer_class(obj)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(
-        detail=True,
-        methods=["post"],
-        url_path="follow_profile",
-        url_name="follow_profile",
-    )
-    def follow_profile(self, request, user__username):
+    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
+    def follow(self, request, user__username):
         follower = self.request.user.profile
         followee = self.get_object()
 
@@ -72,13 +72,8 @@ class ProfileRetrieveUpdateAPIView(
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @action(
-        detail=True,
-        methods=["delete"],
-        url_path="unfollow_profile",
-        url_name="unfollow_profile",
-    )
-    def unfollow_profile(self, request, user__username):
+    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
+    def unfollow(self, request, user__username):
         follower = self.request.user.profile
         followee = self.get_object()
         follower.unfollow(followee)

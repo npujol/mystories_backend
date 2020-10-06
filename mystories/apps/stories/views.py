@@ -1,30 +1,26 @@
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
-from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics, mixins, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import NotFound
-from rest_framework.parsers import FormParser, MultiPartParser
-from rest_framework.permissions import (
-    AllowAny,
-    IsAuthenticated,
-    IsAuthenticatedOrReadOnly,
-)
-from rest_framework.renderers import JSONRenderer
+from rest_framework.parsers import MultiPartParser
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from ..core.permissions import IsOwner, IsOwnerOrReadOnly
 from ..notifications.models import Notification
 from ..profiles.models import Profile
 from .models import Comment, Speech, Story, Tag
 from .serializers import (
     CommentSerializer,
     SpeechSerializer,
+    StoryImageSerializer,
+    StoryPrivateSerializer,
     StorySerializer,
     TagSerializer,
 )
 from .tasks import create_speech
-from .utils import TTSStory
+from .tts import TTSStory
 
 
 class StoryViewSet(viewsets.ModelViewSet):
@@ -45,27 +41,29 @@ class StoryViewSet(viewsets.ModelViewSet):
 
     """
 
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+    permission_classes = (IsOwnerOrReadOnly,)
     serializer_class = StorySerializer
 
     lookup_field = "slug"
     queryset = Story.objects.select_related("author", "author__user")
 
-    def get_queryset(self):
-        queryset = self.queryset
+    def list(self, request, *args, **kwargs):
         author = self.request.query_params.get("author", None)
         favorited_by = self.request.query_params.get("favorited", None)
         tag = self.request.query_params.get("tag", None)
 
         if author is not None:
-            return queryset.filter(author__user__username=author)
+            self.queryset = self.queryset.filter(author__user__username=author)
 
         if tag is not None:
-            return queryset.filter(tags__tag=tag)
+            self.queryset = self.queryset.filter(tags__tag=tag)
 
         if favorited_by is not None:
-            return queryset.filter(favorited_by__user__username=favorited_by)
-        return queryset
+            self.queryset = self.queryset.filter(
+                favorited_by__user__username=favorited_by
+            )
+
+        return super().list(self, request, *args, **kwargs)
 
     def create(self, request):
         serializer = self.serializer_class(
@@ -79,15 +77,30 @@ class StoryViewSet(viewsets.ModelViewSet):
 
     @action(
         detail=True,
+        methods=["get"],
+        permission_classes=[IsOwner],
+        serializer_class=StoryPrivateSerializer,
+    )
+    def get_body_markdown(self, request, slug=None):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(
+        detail=True,
         methods=["put"],
-        permission_classes=[IsAuthenticated],
-        parser_classes=[MultiPartParser, FormParser],
+        permission_classes=[IsOwner],
+        parser_classes=[MultiPartParser],
+        serializer_class=StoryImageSerializer,
     )
     def change_image(self, request, slug=None):
-        obj = self.get_object()
-        obj.image = request.data["image"]
-        obj.save()
-        serializer = self.serializer_class(obj)
+        instance = self.get_object()
+
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
@@ -95,6 +108,7 @@ class StoryViewSet(viewsets.ModelViewSet):
         profile = self.request.user.profile
         serializer_context = {"request": request}
         story = self.get_object()
+
         profile.favorite(story)
 
         Notification.objects.create(
@@ -108,18 +122,19 @@ class StoryViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @action(detail=True, methods=["delete"], permission_classes=[IsAuthenticated])
+    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
     def unfavorite(self, request, slug=None):
         profile = self.request.user.profile
         serializer_context = {"request": request}
         story = self.get_object()
 
         profile.unfavorite(story)
+
         serializer = self.serializer_class(story, context=serializer_context)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
+    @action(detail=True, methods=["post"])
     def make_audio(self, request, slug=None):
         story = self.get_object()
 
@@ -131,7 +146,6 @@ class StoryViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_202_ACCEPTED,
             )
         except Speech.DoesNotExist:
-
             create_speech.delay(slug)
 
             return Response(
@@ -139,7 +153,7 @@ class StoryViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_202_ACCEPTED,
             )
 
-    @action(detail=True, methods=["get"], permission_classes=[IsAuthenticated])
+    @action(detail=True, methods=["get"])
     def get_audio(self, request, slug=None):
         story = self.get_object()
         speech = get_object_or_404(Speech, story=story)
@@ -156,7 +170,7 @@ class TagListAPIView(
     """
     General ViewSet description
 
-    list: List the tags
+    list: List of tags
 
     retrieve: Retrieve a tag
 
@@ -193,7 +207,7 @@ class CommentsAPIView(
     """
     General ViewSet description
 
-    list: List the comments
+    list: List of comments
 
     create: Create a comment
 
@@ -204,11 +218,16 @@ class CommentsAPIView(
     """
 
     serializer_class = CommentSerializer
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+    permission_classes = (IsOwnerOrReadOnly,)
+    queryset = Comment.objects.select_related("story")
 
-    queryset = Comment.objects.select_related(
-        "story", "story__author", "story__author__user", "author", "author__user"
-    )
+    def get_queryset(self):
+        queryset = self.queryset
+        slug = self.kwargs["story_slug"]
+        if slug:
+            return queryset.filter(story__slug=slug)
+
+        return queryset
 
     def create(self, request, story_slug=None):
         data = request.data

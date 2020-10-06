@@ -1,8 +1,8 @@
 from rest_framework import status, viewsets
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from ..core.permissions import IsOwnerOrReadOnly
 from ..profiles.models import Profile
 from .models import Notification
 from .serializers import NotificationSerializer
@@ -26,7 +26,7 @@ class NotificationViewSet(viewsets.ModelViewSet):
 
     """
 
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+    permission_classes = (IsOwnerOrReadOnly,)
     serializer_class = NotificationSerializer
 
     queryset = Notification.objects.select_related("author", "author__user")

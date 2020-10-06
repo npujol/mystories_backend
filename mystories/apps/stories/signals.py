@@ -1,3 +1,4 @@
+import markdown
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.utils.text import slugify
@@ -29,6 +30,12 @@ def add_slug_to_story_if_not_exists(sender, instance, *args, **kwargs):
                 slug = "-".join(parts[:-1])
 
         instance.slug = slug + "-" + unique
+
+
+@receiver(pre_save, sender=Story)
+def add_body_markdown(sender, instance, *args, **kwargs):
+    instance.body = markdown.markdown(instance.body_markdown)
+    print(instance.body)
 
 
 @receiver(pre_save, sender=Speech)
