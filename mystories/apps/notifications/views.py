@@ -29,12 +29,20 @@ class NotificationViewSet(viewsets.ModelViewSet):
     permission_classes = (IsOwnerOrReadOnly,)
     serializer_class = NotificationSerializer
 
-    queryset = Notification.objects.select_related("author", "author__user")
+    queryset = Notification.objects.select_related("receiver", "receiver__user")
+
+    def list(self, request, *args, **kwargs):
+        receiver = request.user.profile
+        print(receiver)
+        if receiver is not None:
+            self.queryset = self.queryset.filter(receiver=receiver)
+
+        return super().list(self, request, *args, **kwargs)
 
     def create(self, request):
         serializer = self.serializer_class(
             data=request.data,
-            context={"author": request.user.profile, "request": request},
+            context={"receiver": request.user.profile, "request": request},
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
