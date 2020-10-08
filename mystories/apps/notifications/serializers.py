@@ -7,7 +7,7 @@ from .models import Notification
 
 class NotificationSerializer(serializers.ModelSerializer):
     author = ProfileSerializer(read_only=True)
-    receiver = serializers.PrimaryKeyRelatedField(queryset=Profile.objects.all())
+    receiver = ProfileSerializer(read_only=True)
 
     createdAt = serializers.SerializerMethodField(method_name="get_created_at")
     updatedAt = serializers.SerializerMethodField(method_name="get_updated_at")
@@ -19,7 +19,7 @@ class NotificationSerializer(serializers.ModelSerializer):
             "author",
             "body",
             "title",
-            "status",
+            "opened",
             "createdAt",
             "updatedAt",
             "receiver",

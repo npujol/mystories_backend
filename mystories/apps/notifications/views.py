@@ -32,9 +32,11 @@ class NotificationViewSet(viewsets.ModelViewSet):
     queryset = Notification.objects.select_related("receiver", "receiver__user")
 
     def list(self, request, *args, **kwargs):
+        opened = self.request.query_params.get("opened", None)
         receiver = request.user.profile
-        print(receiver)
-        if receiver is not None:
+        if receiver is not None and opened is not None:
+            self.queryset = self.queryset.filter(receiver=receiver, opened=opened)
+        elif receiver is not None:
             self.queryset = self.queryset.filter(receiver=receiver)
 
         return super().list(self, request, *args, **kwargs)
