@@ -8,11 +8,7 @@ class Profile(TimestampedModel):
     user = models.OneToOneField("authentication.User", on_delete=models.CASCADE)
     bio = models.TextField(blank=True, null=True)
     image = models.ImageField(
-        _("Avatar"),
-        upload_to="image/%Y/%m/%d/",
-        default="avatar_default.png",
-        null=True,
-        blank=True,
+        _("Avatar"), upload_to="image/%Y/%m/%d/", null=True, blank=True
     )
     follows = models.ManyToManyField(
         "self", related_name="followed_by", symmetrical=False
