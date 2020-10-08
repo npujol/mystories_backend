@@ -3,14 +3,6 @@ from django.utils.translation import gettext as _
 
 from ..core.models import TimestampedModel
 
-NOTIFICATION_STATUS = (
-    ("opened", _("Opened by someone")),
-    ("send", _("It was send")),
-    ("received", _("Received by someone")),
-    ("viewed", _("Viewed by someone")),
-    ("closed", _("Closed - not available anymore")),
-)
-
 
 class Notification(TimestampedModel):
     title = models.CharField(db_index=True, max_length=255)
@@ -27,9 +19,7 @@ class Notification(TimestampedModel):
         null=True,
     )
 
-    status = models.CharField(
-        max_length=32, choices=NOTIFICATION_STATUS, default=NOTIFICATION_STATUS[0]
-    )
+    opened = models.BooleanField(default=False)
 
     def __str__(self):
         return "{}: {}".format(self.author, self.title)
