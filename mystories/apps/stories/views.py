@@ -45,17 +45,17 @@ class StoryViewSet(viewsets.ModelViewSet):
     serializer_class = StorySerializer
 
     lookup_field = "slug"
-    queryset = Story.objects.select_related("author", "author__user")
+    queryset = Story.objects.select_related("owner", "owner__user")
 
     def list(self, request, *args, **kwargs):
-        author = self.request.query_params.get("author__user__username", None)
+        owner = self.request.query_params.get("owner__user__username", None)
         favorited_by = self.request.query_params.get(
             "favorited_by__user__username", None
         )
         tag = self.request.query_params.get("tags__tag", None)
 
-        if author is not None:
-            self.queryset = self.queryset.filter(author__user__username=author)
+        if owner is not None:
+            self.queryset = self.queryset.filter(owner__user__username=owner)
 
         if tag is not None:
             self.queryset = self.queryset.filter(tags__tag=tag)
@@ -116,8 +116,8 @@ class StoryViewSet(viewsets.ModelViewSet):
         Notification.objects.create(
             title=_("Your story was marked as a favorite."),
             body=_("{} marks your story: {} as favorite".format(profile, story)),
-            author=profile,
-            receiver=story.author,
+            sender=profile,
+            owner=story.owner,
         )
 
         serializer = self.serializer_class(story, context=serializer_context)
@@ -235,10 +235,10 @@ class CommentsAPIView(
         data = request.data
         context = {}
 
-        author = get_object_or_404(Profile, user=request.user)
+        owner = get_object_or_404(Profile, user=request.user)
         story = get_object_or_404(Story, slug=story_slug)
 
-        context["author"] = author
+        context["author"] = owner
         context["story"] = story
 
         serializer = self.serializer_class(data=data, context=context)
@@ -247,9 +247,9 @@ class CommentsAPIView(
 
         Notification.objects.create(
             title=_("Your story has a new comment."),
-            body=_("{} comment in your story {}".format(author, story)),
-            author=author,
-            receiver=story.author,
+            body=_("{} comment in your story {}".format(owner, story)),
+            sender=owner,
+            owner=story.owner,
         )
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)

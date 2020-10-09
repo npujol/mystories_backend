@@ -31,32 +31,31 @@ class NotificationViewSet(viewsets.ModelViewSet):
     permission_classes = (IsOwnerOrReadOnly,)
     serializer_class = NotificationSerializer
 
-    queryset = Notification.objects.select_related("receiver", "receiver__user")
+    queryset = Notification.objects.select_related("owner", "owner__user")
 
     def list(self, request, *args, **kwargs):
         opened = self.request.query_params.get("opened", None)
-        receiver = request.user.profile
-        if receiver is not None and opened is not None:
-            self.queryset = self.queryset.filter(receiver=receiver, opened=opened)
-        elif receiver is not None:
-            self.queryset = self.queryset.filter(receiver=receiver)
+        owner = request.user.profile
+        if owner is not None and opened is not None:
+            self.queryset = self.queryset.filter(owner=owner, opened=opened)
+        elif owner is not None:
+            self.queryset = self.queryset.filter(owner=owner)
 
         return super().list(self, request, *args, **kwargs)
 
     def create(self, request):
         serializer = self.serializer_class(
             data=request.data,
-            context={"receiver": request.user.profile, "request": request},
+            context={"owner": request.user.profile, "request": request},
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
+    @action(detail=True, methods=["post"])
     def openedStatus(self, request, pk):
         opened = self.request.data
-        print(opened)
         notification = self.get_object()
         notification.opened = opened
         notification.save()

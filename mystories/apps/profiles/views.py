@@ -66,8 +66,8 @@ class ProfileRetrieveUpdateAPIView(
         Notification.objects.create(
             title=_("You have a new follower"),
             body=_("{} follows you!".format(follower)),
-            author=follower,
-            receiver=followee,
+            sender=follower,
+            owner=followee,
         )
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)

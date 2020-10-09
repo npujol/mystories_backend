@@ -3,7 +3,7 @@ from rest_framework import permissions
 
 class IsOwner(permissions.IsAuthenticated):
     def has_object_permission(self, request, view, obj):
-        return obj.author == request.user.profile
+        return obj.owner == request.user.profile
 
 
 class IsOwnerOrReadOnly(permissions.BasePermission):
@@ -19,4 +19,4 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
             return True
 
         # Instance must have an attribute named `owner`.
-        return obj.author == request.user.profile
+        return obj.owner == request.user.profile

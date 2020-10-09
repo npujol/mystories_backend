@@ -20,7 +20,7 @@ class NotificationListCreateAPIViewTestCase(BaseRestTestCase):
             {
                 "title": "string",
                 "body": "string for the body",
-                "receiver": self.user.profile.pk,
+                "owner": self.user.profile.pk,
             },
             HTTP_AUTHORIZATION="Bearer " + self.user.token,
         )
@@ -47,10 +47,10 @@ class NotificationDetailAPIViewTestCase(BaseRestTestCase):
     def setUp(self):
         super().setUp()
         self.notification = Notification.objects.create(
-            author=self.user.profile,
+            owner=self.user.profile,
             title="test",
             body="body for test",
-            receiver=self.user.profile,
+            owner=self.user.profile,
         )
         self.url = reverse(
             "notifications:notification-detail", kwargs={"pk": self.notification.pk}
@@ -76,7 +76,7 @@ class NotificationDetailAPIViewTestCase(BaseRestTestCase):
             {
                 "title": "string",
                 "body": "string for the body",
-                "receiver": self.user.profile.pk,
+                "owner": self.user.profile.pk,
             },
             HTTP_AUTHORIZATION="Bearer " + self.user.token,
         )
