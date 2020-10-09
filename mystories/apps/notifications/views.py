@@ -1,4 +1,6 @@
 from rest_framework import status, viewsets
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -50,3 +52,13 @@ class NotificationViewSet(viewsets.ModelViewSet):
         serializer.save()
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
+    def openedStatus(self, request, pk):
+        opened = self.request.query_params.get("opened", None)
+        notification = self.get_object()
+        notification.opened = opened
+        notification.save()
+        serializer = self.serializer_class(notification, context={"request": request})
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
