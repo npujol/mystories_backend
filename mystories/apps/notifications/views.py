@@ -55,7 +55,8 @@ class NotificationViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
     def openedStatus(self, request, pk):
-        opened = self.request.query_params.get("opened", None)
+        opened = self.request.data
+        print(opened)
         notification = self.get_object()
         notification.opened = opened
         notification.save()
