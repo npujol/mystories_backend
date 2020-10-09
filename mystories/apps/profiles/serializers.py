@@ -14,11 +14,6 @@ class ProfileSerializer(serializers.ModelSerializer):
         fields = ("username", "bio", "image", "following")
         read_only_fields = ("username",)
 
-    def save(self, *args, **kwargs):
-        if self.instance.image:
-            self.instance.image.delete()
-        return super().save(*args, **kwargs)
-
     def get_following(self, profile):
         request = self.context.get("request", None)
         if request is None or not request.user.is_authenticated:
