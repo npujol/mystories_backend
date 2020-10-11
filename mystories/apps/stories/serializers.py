@@ -122,7 +122,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         story = self.context["story"]
-        owner = self.context["owner"]
+        owner = self.context["author"]
 
         return Comment.objects.create(owner=owner, story=story, **validated_data)
 
@@ -136,7 +136,7 @@ class CommentSerializer(serializers.ModelSerializer):
 class SpeechSerializer(serializers.ModelSerializer):
     story = StorySerializer(read_only=True, required=False)
     language = serializers.CharField(required=False)
-
+    speech_file = serializers.SerializerMethodField(method_name="speech_file_abs")
     createdAt = serializers.SerializerMethodField(method_name="get_created_at")
     updatedAt = serializers.SerializerMethodField(method_name="get_updated_at")
 
@@ -149,3 +149,6 @@ class SpeechSerializer(serializers.ModelSerializer):
 
     def get_updated_at(self, instance):
         return instance.updated_at.isoformat()
+
+    def speech_file_abs(self, instance):
+        return self.context["request"].build_absolute_uri(instance.speech_file.url)

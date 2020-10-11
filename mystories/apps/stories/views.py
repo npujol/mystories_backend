@@ -136,31 +136,22 @@ class StoryViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=["post"])
+    @action(detail=True, methods=["post"], serializer_class=SpeechSerializer)
     def make_audio(self, request, slug=None):
         story = self.get_object()
+        create_speech.delay(slug)
 
-        try:
-            speech = Speech.objects.get(story=story)
+        return Response(
+            {"message": "We are making the speech! We will notify you."},
+            status=status.HTTP_202_ACCEPTED,
+        )
 
-            return Response(
-                {"message": "This story has a speech already"},
-                status=status.HTTP_202_ACCEPTED,
-            )
-        except Speech.DoesNotExist:
-            create_speech.delay(slug)
-
-            return Response(
-                {"message": "We are making the speech! We will notify you."},
-                status=status.HTTP_202_ACCEPTED,
-            )
-
-    @action(detail=True, methods=["get"])
+    @action(detail=True, methods=["get"], serializer_class=SpeechSerializer)
     def get_audio(self, request, slug=None):
         story = self.get_object()
         speech = get_object_or_404(Speech, story=story)
 
-        return Response(SpeechSerializer(speech).data, status=status.HTTP_200_OK)
+        return Response(self.get_serializer(speech).data, status=status.HTTP_200_OK)
 
 
 class TagListAPIView(
