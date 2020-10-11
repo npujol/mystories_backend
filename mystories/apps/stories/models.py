@@ -31,7 +31,7 @@ class Story(TimestampedModel):
         null=True,
         blank=True,
     )
-    author = models.ForeignKey(
+    owner = models.ForeignKey(
         "profiles.Profile", on_delete=models.CASCADE, related_name=_("stories")
     )
     tags = models.ManyToManyField("stories.Tag", related_name=_("stories"))
@@ -45,7 +45,7 @@ class Comment(TimestampedModel):
     story = models.ForeignKey(
         "stories.Story", related_name=_("comments"), on_delete=models.CASCADE
     )
-    author = models.ForeignKey(
+    owner = models.ForeignKey(
         "profiles.Profile", related_name=_("comments"), on_delete=models.CASCADE
     )
 

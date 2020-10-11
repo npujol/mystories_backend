@@ -19,7 +19,7 @@ class StoryPrivateSerializer(serializers.ModelSerializer):
 
 
 class StorySerializer(serializers.ModelSerializer):
-    author = ProfileSerializer(read_only=True)
+    owner = ProfileSerializer(read_only=True)
     slug = serializers.SlugField(read_only=True)
     tags = AddObjectSlugRelatedField(
         slug_field="tag", queryset=Tag.objects.all(), many=True
@@ -39,7 +39,7 @@ class StorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Story
         fields = (
-            "author",
+            "owner",
             "body",
             "body_markdown",
             "language",
@@ -55,9 +55,9 @@ class StorySerializer(serializers.ModelSerializer):
         )
 
     def create(self, validated_data):
-        author = self.context.get("author", None)
+        owner = self.context.get("author", None)
         tags = validated_data.pop("tags", [])
-        story = Story.objects.create(author=author, **validated_data)
+        story = Story.objects.create(owner=owner, **validated_data)
 
         for tag in tags:
             story.tags.add(tag)
@@ -96,7 +96,7 @@ class StoryImageSerializer(StorySerializer):
 
     class Meta(StorySerializer.Meta):
         read_only_fields = (
-            "author",
+            "owner",
             "body",
             "language",
             "description",
@@ -111,20 +111,20 @@ class StoryImageSerializer(StorySerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    author = ProfileSerializer(required=False)
+    owner = ProfileSerializer(required=False)
     story = StorySerializer(required=False)
     createdAt = serializers.SerializerMethodField(method_name="get_created_at")
     updatedAt = serializers.SerializerMethodField(method_name="get_updated_at")
 
     class Meta:
         model = Comment
-        fields = ("id", "author", "story", "body", "createdAt", "updatedAt")
+        fields = ("id", "owner", "story", "body", "createdAt", "updatedAt")
 
     def create(self, validated_data):
         story = self.context["story"]
-        author = self.context["author"]
+        owner = self.context["author"]
 
-        return Comment.objects.create(author=author, story=story, **validated_data)
+        return Comment.objects.create(owner=owner, story=story, **validated_data)
 
     def get_created_at(self, instance):
         return instance.created_at.isoformat()
@@ -136,7 +136,7 @@ class CommentSerializer(serializers.ModelSerializer):
 class SpeechSerializer(serializers.ModelSerializer):
     story = StorySerializer(read_only=True, required=False)
     language = serializers.CharField(required=False)
-
+    speech_file = serializers.SerializerMethodField(method_name="speech_file_abs")
     createdAt = serializers.SerializerMethodField(method_name="get_created_at")
     updatedAt = serializers.SerializerMethodField(method_name="get_updated_at")
 
@@ -149,3 +149,6 @@ class SpeechSerializer(serializers.ModelSerializer):
 
     def get_updated_at(self, instance):
         return instance.updated_at.isoformat()
+
+    def speech_file_abs(self, instance):
+        return self.context["request"].build_absolute_uri(instance.speech_file.url)

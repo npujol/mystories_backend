@@ -48,6 +48,6 @@ def on_change(sender, instance: Speech, **kwargs):
         Notification.objects.create(
             title=_("The speech is ready"),
             body=_("The speech for the story: {} is ready".format(previous.story.slug)),
-            author=previous.story.author,
-            receiver=previous.story.author,
+            sender=previous.story.owner,
+            owner=previous.story.owner,
         )

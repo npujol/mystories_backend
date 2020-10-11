@@ -26,8 +26,8 @@ class TTSStory:
             [
                 "Title",
                 self.story.title,
-                "Author",
-                self.story.author.user.username,
+                "owner",
+                self.story.owner.user.username,
                 self.story.body,
             ]
         )

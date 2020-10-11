@@ -24,7 +24,7 @@ class StoryListCreateAPIViewTestCase(BaseRestTestCase):
                 "description": "string",
                 "tags": ["string"],
             },
-            HTTP_AUTHORIZATION="Bearer " + self.user.token,
+            HTTP_ownerIZATION="Bearer " + self.user.token,
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Story.objects.all().count(), (stories_count + 1))
@@ -37,7 +37,7 @@ class StoryListCreateAPIViewTestCase(BaseRestTestCase):
         response = self.client.get(
             self.url,
             limit=self.NUMBER_PAGES,
-            HTTP_AUTHORIZATION="Bearer " + self.user.token,
+            HTTP_ownerIZATION="Bearer " + self.user.token,
         )
 
         self.assertEqual(response.json().get("count"), Story.objects.all().count())
@@ -47,7 +47,7 @@ class StoryDetailAPIViewTestCase(BaseRestTestCase):
     def setUp(self):
         super().setUp()
         self.story = Story.objects.create(
-            author=self.user.profile,
+            owner=self.user.profile,
             title="test",
             body_markdown="body for test",
             description="description for test",
@@ -59,7 +59,7 @@ class StoryDetailAPIViewTestCase(BaseRestTestCase):
         Test to verify a story object detail
         """
         response = self.client.get(
-            path=self.url, HTTP_AUTHORIZATION="Bearer " + self.user.token
+            path=self.url, HTTP_ownerIZATION="Bearer " + self.user.token
         )
 
         self.assertEqual(200, response.status_code)
@@ -73,7 +73,7 @@ class StoryDetailAPIViewTestCase(BaseRestTestCase):
                 "description": "string",
                 "tags": ["string"],
             },
-            HTTP_AUTHORIZATION="Bearer " + self.user.token,
+            HTTP_ownerIZATION="Bearer " + self.user.token,
         )
 
         story = Story.objects.get(id=self.story.id)
@@ -83,7 +83,7 @@ class StoryDetailAPIViewTestCase(BaseRestTestCase):
         response = self.client.patch(
             self.url,
             {"body_markdown": "another body"},
-            HTTP_AUTHORIZATION="Bearer " + self.user.token,
+            HTTP_ownerIZATION="Bearer " + self.user.token,
         )
 
         story = Story.objects.get(id=self.story.id)
@@ -91,7 +91,7 @@ class StoryDetailAPIViewTestCase(BaseRestTestCase):
 
     def test_story_object_delete(self):
         response = self.client.delete(
-            self.url, HTTP_AUTHORIZATION="Bearer " + self.user.token
+            self.url, HTTP_ownerIZATION="Bearer " + self.user.token
         )
 
         self.assertEqual(204, response.status_code)
@@ -101,7 +101,7 @@ class StoryDetailAPIViewTestCase(BaseRestTestCase):
         Test to favorite story
         """
         url = reverse("stories:story-favorite", kwargs={"slug": self.story.slug})
-        response = self.client.post(url, HTTP_AUTHORIZATION="Bearer " + self.user.token)
+        response = self.client.post(url, HTTP_ownerIZATION="Bearer " + self.user.token)
 
         self.assertEqual(201, response.status_code)
 
@@ -110,7 +110,7 @@ class StoryDetailAPIViewTestCase(BaseRestTestCase):
         Test to unfavorite story
         """
         url = reverse("stories:story-unfavorite", kwargs={"slug": self.story.slug})
-        response = self.client.post(url, HTTP_AUTHORIZATION="Bearer " + self.user.token)
+        response = self.client.post(url, HTTP_ownerIZATION="Bearer " + self.user.token)
 
         self.assertEqual(200, response.status_code)
 
@@ -119,7 +119,7 @@ class StoryDetailAPIViewTestCase(BaseRestTestCase):
         Test to create a speech from a story
         """
         url = reverse("stories:story-make-audio", kwargs={"slug": self.story.slug})
-        response = self.client.post(url, HTTP_AUTHORIZATION="Bearer " + self.user.token)
+        response = self.client.post(url, HTTP_ownerIZATION="Bearer " + self.user.token)
 
         self.assertEqual(202, response.status_code)
 
@@ -130,7 +130,7 @@ class StoryDetailAPIViewTestCase(BaseRestTestCase):
         url = reverse("stories:story-get-audio", kwargs={"slug": self.story.slug})
         Speech.objects.create(story=self.story, language="en")
 
-        response = self.client.get(url, HTTP_AUTHORIZATION="Bearer " + self.user.token)
+        response = self.client.get(url, HTTP_ownerIZATION="Bearer " + self.user.token)
 
         self.assertEqual(200, response.status_code)
 
@@ -139,7 +139,7 @@ class StoriesFeedAPIViewTestCase(BaseRestTestCase):
     def setUp(self):
         super().setUp()
         self.story = Story.objects.create(
-            author=self.user.profile,
+            owner=self.user.profile,
             title="test",
             body_markdown="body for test",
             description="description for test",
@@ -153,7 +153,7 @@ class StoriesFeedAPIViewTestCase(BaseRestTestCase):
         response = self.client.get(
             self.url,
             limit=self.NUMBER_PAGES,
-            HTTP_AUTHORIZATION="Bearer " + self.user.token,
+            HTTP_ownerIZATION="Bearer " + self.user.token,
         )
 
         self.assertEqual(response.json().get("count"), Story.objects.all().count())
@@ -167,7 +167,7 @@ class TagCreateAPIViewTestCase(BaseRestTestCase):
     def test_create_tag(self):
         tags_count = Tag.objects.all().count()
         response = self.client.post(
-            self.url, {"tag": "word"}, HTTP_AUTHORIZATION="Bearer " + self.user.token
+            self.url, {"tag": "word"}, HTTP_ownerIZATION="Bearer " + self.user.token
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -181,7 +181,7 @@ class TagCreateAPIViewTestCase(BaseRestTestCase):
         response = self.client.get(
             self.url,
             limit=self.NUMBER_PAGES,
-            HTTP_AUTHORIZATION="Bearer " + self.user.token,
+            HTTP_ownerIZATION="Bearer " + self.user.token,
         )
 
         self.assertEqual(response.json().get("count"), Tag.objects.all().count())
@@ -198,7 +198,7 @@ class TagDetailAPIViewTestCase(BaseRestTestCase):
         Test to verify a tag object detail
         """
         response = self.client.get(
-            path=self.url, HTTP_AUTHORIZATION="Bearer " + self.user.token
+            path=self.url, HTTP_ownerIZATION="Bearer " + self.user.token
         )
         self.assertEqual(200, response.status_code)
 
@@ -208,7 +208,7 @@ class CommentListCreateAPIViewTestCase(BaseRestTestCase):
         super().setUp()
 
         self.story = Story.objects.create(
-            author=self.user.profile,
+            owner=self.user.profile,
             title="test",
             body_markdown="body for test",
             description="description for test",
@@ -224,7 +224,7 @@ class CommentListCreateAPIViewTestCase(BaseRestTestCase):
         response = self.client.post(
             self.url,
             {"body": "string for the body"},
-            HTTP_AUTHORIZATION="Bearer " + self.user.token,
+            HTTP_ownerIZATION="Bearer " + self.user.token,
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -238,7 +238,7 @@ class CommentListCreateAPIViewTestCase(BaseRestTestCase):
         response = self.client.get(
             self.url,
             limit=self.NUMBER_PAGES,
-            HTTP_AUTHORIZATION="Bearer " + self.user.token,
+            HTTP_ownerIZATION="Bearer " + self.user.token,
         )
 
         self.assertEqual(response.json().get("count"), Comment.objects.all().count())
@@ -248,13 +248,13 @@ class CommentDetailAPIViewTestCase(BaseRestTestCase):
     def setUp(self):
         super().setUp()
         self.story = Story.objects.create(
-            author=self.user.profile,
+            owner=self.user.profile,
             title="test",
             body_markdown="body for test",
             description="description for test",
         )
         self.comment = Comment.objects.create(
-            author=self.user.profile, body="body for test", story=self.story
+            owner=self.user.profile, body="body for test", story=self.story
         )
         self.url = reverse(
             "stories:comment-detail",
@@ -266,14 +266,14 @@ class CommentDetailAPIViewTestCase(BaseRestTestCase):
         Test to verify a comment object detail
         """
         response = self.client.get(
-            path=self.url, HTTP_AUTHORIZATION="Bearer " + self.user.token
+            path=self.url, HTTP_ownerIZATION="Bearer " + self.user.token
         )
 
         self.assertEqual(200, response.status_code)
 
     def test_comment_object_delete(self):
         response = self.client.delete(
-            self.url, HTTP_AUTHORIZATION="Bearer " + self.user.token
+            self.url, HTTP_ownerIZATION="Bearer " + self.user.token
         )
 
         self.assertEqual(204, response.status_code)

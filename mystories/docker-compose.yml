@@ -21,13 +21,18 @@ services:
     links:
       - db
       - broker
+      - redis
+
+  redis:
+        image: redis:3.2.8
+        hostname: redis
 
   broker:
     image: rabbitmq:latest
     hostname: broker
     environment:
-      - RABBITMQ_DEFAULT_USER=admin
-      - RABBITMQ_DEFAULT_PASS=mypass
+      - RABBITMQ_DEFAULT_USER=adminrabbit
+      - RABBITMQ_DEFAULT_PASS=mypass123
     ports:
       - "5672:5672"
 
@@ -39,3 +44,4 @@ services:
       - .:/code
     links:
       - broker
+      - redis
