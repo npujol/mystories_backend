@@ -107,6 +107,8 @@ class StoryImageSerializer(StorySerializer):
             "title",
             "createdAt",
             "updatedAt",
+            "tags",
+            "body_markdown",
         )
 
 
