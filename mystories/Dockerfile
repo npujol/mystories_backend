@@ -15,3 +15,5 @@ RUN poetry config virtualenvs.create false \
   && poetry install --no-interaction --no-ansi
 
 COPY . /code/
+
+RUN python manage.py collectstatic

@@ -37,9 +37,13 @@ services:
       - .:/code
     links:
       - broker
+
   nginx:
     build: ./nginx
     ports:
-      - 8000:80
-    depends_on:
+      - 8000:8000
+    volumes:
+      - ./media:/media
+      - ./static_files:/static
+    links:
       - web
