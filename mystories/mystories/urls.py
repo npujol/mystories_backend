@@ -20,22 +20,24 @@ schema_view = get_schema_view(
 
 
 urlpatterns = [
-    path("", RedirectView.as_view(pattern_name="schema-swagger-ui")),
-    path("", include("apps.stories.urls", namespace="stories")),
-    path("", include("apps.authentication.urls", namespace="authentication")),
-    path("", include("apps.profiles.urls", namespace="profiles")),
-    path("", include("apps.notifications.urls", namespace="notifications")),
+    path("api/", RedirectView.as_view(pattern_name="schema-swagger-ui")),
+    path("api/", include("apps.stories.urls", namespace="stories")),
+    path("api/", include("apps.authentication.urls", namespace="authentication")),
+    path("api/", include("apps.profiles.urls", namespace="profiles")),
+    path("api/", include("apps.notifications.urls", namespace="notifications")),
     url(
-        r"^swagger(?P<format>\.json|\.yaml)$",
+        r"^api/swagger(?P<format>\.json|\.yaml)$",
         schema_view.without_ui(cache_timeout=0),
         name="schema-json",
     ),
     path(
-        "swagger/",
+        "api/swagger/",
         schema_view.with_ui("swagger", cache_timeout=0),
         name="schema-swagger-ui",
     ),
-    path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
+    path(
+        "api/redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"
+    ),
 ] + (
     static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
