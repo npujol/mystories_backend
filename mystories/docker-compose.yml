@@ -45,5 +45,6 @@ services:
     volumes:
       - ./media:/media
       - ./static_files:/static
+      - ./dist:/dist
     links:
       - web
