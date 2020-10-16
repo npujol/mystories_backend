@@ -35,7 +35,6 @@ def add_slug_to_story_if_not_exists(sender, instance, *args, **kwargs):
 @receiver(pre_save, sender=Story)
 def add_body_markdown(sender, instance, *args, **kwargs):
     instance.body = markdown.markdown(instance.body_markdown)
-    print(instance.body)
 
 
 @receiver(pre_save, sender=Speech)

@@ -95,6 +95,19 @@ class StoryImageSerializer(StorySerializer):
     image = serializers.ImageField()
 
     class Meta(StorySerializer.Meta):
+        fields = (
+            "owner",
+            "body",
+            "language",
+            "image",
+            "description",
+            "favorited",
+            "favoritesCount",
+            "slug",
+            "title",
+            "createdAt",
+            "updatedAt",
+        )
         read_only_fields = (
             "owner",
             "body",
@@ -103,12 +116,9 @@ class StoryImageSerializer(StorySerializer):
             "favorited",
             "favoritesCount",
             "slug",
-            "tags",
             "title",
             "createdAt",
             "updatedAt",
-            "tags",
-            "body_markdown",
         )
 
 
