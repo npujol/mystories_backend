@@ -177,7 +177,6 @@ SWAGGER_SETTINGS = {
             "scheme": "bearer",
         }
     },
-    "PERSIST_AUTH": True,
 }
 
 SIMPLE_JWT = {
