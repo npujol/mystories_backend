@@ -96,5 +96,6 @@ settings.json
 #static
 apps/static
 media/
+static_files/
 
 *.mp3

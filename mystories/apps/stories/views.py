@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser
@@ -46,6 +47,12 @@ class StoryViewSet(viewsets.ModelViewSet):
 
     lookup_field = "slug"
     queryset = Story.objects.select_related("owner", "owner__user")
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = [
+        "tags__tag",
+        "owner__user__username",
+        "favorited_by__user__username",
+    ]
 
     def list(self, request, *args, **kwargs):
         owner = self.request.query_params.get("owner__user__username", None)

@@ -12,20 +12,13 @@ services:
   web:
     image: mystories
     build: .
-    command: bash -c "python /code/manage.py migrate --noinput && python /code/manage.py runserver 0.0.0.0:8000"
+    command: bash -c "python /code/manage.py migrate --noinput && gunicorn mystories.wsgi:application --bind 0.0.0.0:8000 --reload"
     volumes:
       - .:/code
       - ./media:/code/media
-    ports:
-      - "8000:8000"
     links:
       - db
       - broker
-      - redis
-
-  redis:
-        image: redis:3.2.8
-        hostname: redis
 
   broker:
     image: rabbitmq:latest
@@ -44,4 +37,14 @@ services:
       - .:/code
     links:
       - broker
-      - redis
+
+  nginx:
+    build: ./nginx
+    ports:
+      - 8000:8000
+    volumes:
+      - ./media:/media
+      - ./static_files:/static
+      - ./dist:/dist
+    links:
+      - web
