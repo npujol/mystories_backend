@@ -39,12 +39,13 @@ services:
       - broker
 
   nginx:
-    build: ./nginx
+    build:
+      context: .
+      dockerfile: ./nginx/Dockerfile
     ports:
       - 8000:8000
     volumes:
       - ./media:/media
       - ./static_files:/static
-      - ./dist:/dist
     links:
       - web

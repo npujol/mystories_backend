@@ -2,3 +2,4 @@
 **/*.pyc
 /media
 .vscode/
+/frontend/mystories/node_modules
