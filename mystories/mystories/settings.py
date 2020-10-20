@@ -114,7 +114,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/3.0/topics/i18n/
 
-LANGUAGES = (("en", _("English")), ("es", _("Spanish")))
+LANGUAGES = (("en", _("English")), ("es", _("Spanish")), ("de", _("German")))
 
 LOCALE_PATHS = (os.path.join(BASE_DIR, "locale"),)
 
@@ -202,11 +202,12 @@ SIMPLE_JWT = {
 
 # Celery
 
-CELERY_BROKER_URL = "amqp://admin:mypass@broker:5672"
-CELERY_RESULT_BACKEND = "amqp://admin:mypass@broker:5672"
+CELERY_BROKER_URL = "redis://redis:6379"
+CELERY_RESULT_BACKEND = "redis://redis:6379"
 CELERY_ACCEPT_CONTENT = ["application/json"]
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TASK_SERIALIZER = "json"
+
 
 CACHES = {
     "default": {
