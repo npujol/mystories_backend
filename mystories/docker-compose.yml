@@ -18,16 +18,11 @@ services:
       - ./media:/code/media
     links:
       - db
-      - broker
+      - redis
 
-  broker:
-    image: rabbitmq:latest
-    hostname: broker
-    environment:
-      - RABBITMQ_DEFAULT_USER=adminrabbit
-      - RABBITMQ_DEFAULT_PASS=mypass123
-    ports:
-      - "5672:5672"
+  redis:
+    image: redis:alpine
+
 
   worker:
     image: mystories
@@ -36,7 +31,7 @@ services:
     volumes:
       - .:/code
     links:
-      - broker
+      - redis
 
   nginx:
     build:

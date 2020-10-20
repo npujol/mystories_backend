@@ -258,6 +258,14 @@ version = "1.5.0"
 
 [[package]]
 category = "main"
+description = "Django-environ allows you to utilize 12factor inspired environment variables to configure your Django application."
+name = "django-environ"
+optional = false
+python-versions = "*"
+version = "0.4.5"
+
+[[package]]
+category = "main"
 description = "Extensions for Django"
 name = "django-extensions"
 optional = false
@@ -836,7 +844,7 @@ python-versions = "*"
 version = "1.12.1"
 
 [metadata]
-content-hash = "095b897046ba3884a4116cf9d4b2f02804f0db77336ab5d6fc4bfe570d80ba91"
+content-hash = "12b9b8bbd2ebbdfa587c417505600805152ff987828bc8547d8bcccc8d0abaa2"
 python-versions = "~3.8"
 
 [metadata.files]
@@ -916,6 +924,10 @@ django-celery-results = [
 django-cors-middleware = [
     {file = "django-cors-middleware-1.5.0.tar.gz", hash = "sha256:856dbe4d7aae65844ccc68acb49c6da7dbf7cbacaf5bcf37019f4c0c60b3be84"},
     {file = "django_cors_middleware-1.5.0-py3-none-any.whl", hash = "sha256:5bbdea85e22909d596e26f6e0dbc174d5521429fa3943ae02a2c6c48e76c88c7"},
+]
+django-environ = [
+    {file = "django-environ-0.4.5.tar.gz", hash = "sha256:6c9d87660142608f63ec7d5ce5564c49b603ea8ff25da595fd6098f6dc82afde"},
+    {file = "django_environ-0.4.5-py2.py3-none-any.whl", hash = "sha256:c57b3c11ec1f319d9474e3e5a79134f40174b17c7cc024bbb2fad84646b120c4"},
 ]
 django-extensions = [
     {file = "django-extensions-2.2.9.tar.gz", hash = "sha256:2f81b618ba4d1b0e58603e25012e5c74f88a4b706e0022a3b21f24f0322a6ce6"},
