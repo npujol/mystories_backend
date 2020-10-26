@@ -11,7 +11,6 @@ __pycache__/
 env/
 build/
 develop-eggs/
-dist/
 downloads/
 eggs/
 .eggs/
@@ -96,6 +95,5 @@ settings.json
 #static
 apps/static
 media/
-static_files/
 
 *.mp3
