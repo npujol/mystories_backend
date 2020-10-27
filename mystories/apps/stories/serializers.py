@@ -32,7 +32,7 @@ class StorySerializer(serializers.ModelSerializer):
     )
     body = serializers.CharField(read_only=True)
     body_markdown = serializers.CharField(write_only=True)
-
+    hadAudio = serializers.SerializerMethodField(method_name="had_audio")
     createdAt = serializers.SerializerMethodField(method_name="get_created_at")
     updatedAt = serializers.SerializerMethodField(method_name="get_updated_at")
 
@@ -42,6 +42,7 @@ class StorySerializer(serializers.ModelSerializer):
             "owner",
             "body",
             "body_markdown",
+            "hadAudio",
             "language",
             "image",
             "description",
@@ -73,9 +74,6 @@ class StorySerializer(serializers.ModelSerializer):
         instance = super(StorySerializer, self).update(instance, validated_data)
         return instance
 
-    def get_created_at(self, instance):
-        return instance.created_at.isoformat()
-
     def get_favorited(self, instance):
         request = self.context.get("request", None)
 
@@ -87,8 +85,14 @@ class StorySerializer(serializers.ModelSerializer):
     def get_favorites_count(self, instance):
         return instance.favorited_by.count()
 
+    def get_created_at(self, instance):
+        return instance.created_at.isoformat()
+
     def get_updated_at(self, instance):
         return instance.updated_at.isoformat()
+
+    def had_audio(self, instance):
+        return Speech.objects.filter(story=instance).exists()
 
 
 class StoryImageSerializer(StorySerializer):
@@ -101,6 +105,7 @@ class StoryImageSerializer(StorySerializer):
             "language",
             "image",
             "description",
+            "hadAudio",
             "favorited",
             "favoritesCount",
             "slug",
@@ -113,6 +118,7 @@ class StoryImageSerializer(StorySerializer):
             "body",
             "language",
             "description",
+            "hadAudio",
             "favorited",
             "favoritesCount",
             "slug",

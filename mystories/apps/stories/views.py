@@ -96,15 +96,6 @@ class StoryViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=["get"])
-    def had_audio(self, request, slug=None):
-        story = self.get_object()
-        speech = get_object_or_404(Speech, story=story)
-        had_audio = True if speech else False
-        print(had_audio)
-
-        return Response({"had_audio": had_audio}, status=status.HTTP_200_OK)
-
     @action(
         detail=True,
         methods=["put"],
