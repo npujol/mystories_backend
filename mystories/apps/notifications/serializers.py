@@ -23,6 +23,7 @@ class NotificationSerializer(serializers.ModelSerializer):
             "createdAt",
             "updatedAt",
             "sender",
+            "optional",
         )
 
     def create(self, validated_data):
