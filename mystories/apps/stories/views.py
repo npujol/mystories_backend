@@ -125,6 +125,7 @@ class StoryViewSet(viewsets.ModelViewSet):
             body=_("{} marks your story: {} as favorite".format(profile, story)),
             sender=profile,
             owner=story.owner,
+            optional=f"{profile}, {story}",
         )
 
         serializer = self.serializer_class(story, context=serializer_context)
@@ -145,7 +146,6 @@ class StoryViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"], serializer_class=SpeechSerializer)
     def make_audio(self, request, slug=None):
-        story = self.get_object()
         create_speech.delay(slug)
 
         return Response(
@@ -248,6 +248,7 @@ class CommentsAPIView(
             body=_("{} comment in your story {}".format(owner, story)),
             sender=owner,
             owner=story.owner,
+            optional=f"{owner},{story}",
         )
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)

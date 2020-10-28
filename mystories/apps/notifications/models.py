@@ -23,6 +23,7 @@ class Notification(TimestampedModel):
     )
 
     opened = models.BooleanField(default=False)
+    optional = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
         return "{}: {}".format(self.owner, self.title)

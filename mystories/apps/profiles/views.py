@@ -68,6 +68,7 @@ class ProfileRetrieveUpdateAPIView(
             body=_("{} follows you!".format(follower)),
             sender=follower,
             owner=followee,
+            optional=f"{follower}",
         )
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)

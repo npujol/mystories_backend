@@ -49,4 +49,5 @@ def on_change(sender, instance: Speech, **kwargs):
             body=_("The speech for the story: {} is ready".format(previous.story.slug)),
             sender=previous.story.owner,
             owner=previous.story.owner,
+            optional=f"{previous.story.slug}",
         )
