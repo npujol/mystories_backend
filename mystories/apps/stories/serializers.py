@@ -92,7 +92,16 @@ class StorySerializer(serializers.ModelSerializer):
         return instance.updated_at.isoformat()
 
     def had_audio(self, instance):
-        return Speech.objects.filter(story=instance).exists()
+        response = None
+        if Speech.objects.filter(story=instance).exists():
+            speech = Speech.objects.get(story=instance)
+            response = (
+                self.context["request"].build_absolute_uri(speech.speech_file.url)
+                if speech.is_ready
+                else None
+            )
+            print(speech)
+        return response
 
 
 class StoryImageSerializer(StorySerializer):
